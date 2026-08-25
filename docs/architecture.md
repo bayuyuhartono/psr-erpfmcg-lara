@@ -2,10 +2,9 @@
 
 Decided 2026-08-25. Laravel 13, PHP 8.4+, MySQL 9.7, Filament v5.
 
-> **Status:** this describes the target structure. As of writing, only the
-> database schema and the Blueprint macros exist; the `app/Domain` tree below
-> has not been created yet. Build against this document, and amend it here when
-> reality diverges — a stale architecture doc is worse than none.
+> **Status:** the M0 foundation is implemented: the domain tree, Eloquent
+> models, decimal handling, audit observer, numbering service, authorization,
+> seed data, and Filament panel now exist. The posting kernel remains M1 work.
 
 ---
 

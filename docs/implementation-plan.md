@@ -35,16 +35,16 @@ commented inline in the migration file.
 | 0.4 | `users` rebuilt as UUID + ERP columns | ✅ | |
 | 0.5 | Up/down/up cycle verified | ✅ | `migrate` → `migrate:reset` → `migrate` clean |
 | 0.6 | Constraint behaviour verified | ✅ | `stock_balances` NULL-key fix, 3 CHECKs, generated `variance` |
-| 0.7 | Domain folder skeleton | ⬜ | Per [architecture.md](architecture.md) §2: `app/Domain/{Masters,Purchasing,Inventory,Sales,Consignment,Finance,Accounting}` |
-| 0.8 | Eloquent models, all tables | ⬜ | `HasUuids` with UUIDv7, `SoftDeletes`, relations |
-| 0.9 | Decimal casts for money/qty | ⬜ | No float ever reaches PHP arithmetic; `brick/math` or bcmath casts |
-| 0.10 | `OwnedStock` global scope | ⬜ | `owner_id IS NULL`; schema §11 warns inventory is overstated without it |
-| 0.11 | Audit log observer | ⬜ | Model events → `audit_logs` with old/new JSON |
-| 0.12 | `DocumentNumberer` service | ⬜ | Row lock on `number_sequences`, never `COUNT(*)` |
-| 0.13 | Filament v5 install + panel | ⬜ | Verified resolvable against Laravel 13.26 |
-| 0.14 | Auth, roles, permissions | ⬜ | Schema's own `role_permissions` incl. `threshold` ceilings (F-70) |
-| 0.15 | Seeders: COA, roles, settings, journal mappings | ⬜ | Must be idempotent — they run on every client install |
-| 0.16 | Model factories + test harness | ⬜ | Pest or PHPUnit; factories needed before M1 tests |
+| 0.7 | Domain folder skeleton | ✅ | Seven bounded contexts plus `Support`; subfolders retained with placeholders |
+| 0.8 | Eloquent models, all tables | ✅ | 69 ERP table models plus `User`; generated from migrations with UUIDv7, soft deletes, and relations |
+| 0.9 | Decimal casts for money/qty | ✅ | `DecimalCast` exposes `brick/math` `BigDecimal`; scales inferred from migration macros |
+| 0.10 | `OwnedStock` global scope | ✅ | Applied to ledger and balance models; explicit `includingConsigned()` escape hatch |
+| 0.11 | Audit log observer | ✅ | Insert/update/delete old/new JSON; credentials redacted |
+| 0.12 | `DocumentNumberer` service | ✅ | Transaction + `lockForUpdate()` on the configured branch/type/period row |
+| 0.13 | Filament v5 install + panel | ✅ | Filament 5.7 admin panel at `/admin` |
+| 0.14 | Auth, roles, permissions | ✅ | Native roles plus exact decimal threshold ceilings; inactive/unassigned users cannot enter panel |
+| 0.15 | Seeders: COA, roles, settings, journal mappings | ✅ | Idempotent; verified twice against MySQL |
+| 0.16 | Model factories + test harness | ✅ | PHPUnit with SQLite in-memory; core master/inventory factories and M0 feature tests |
 
 ---
 
