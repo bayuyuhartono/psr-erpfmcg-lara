@@ -5,15 +5,34 @@ namespace App\Domain\Purchasing\Models;
 use App\Domain\Inventory\Models\Warehouse;
 use App\Domain\Masters\Models\Branch;
 use App\Domain\Masters\Models\BusinessPartner;
+use App\Domain\Purchasing\States\PurchaseOrderStates;
 use App\Domain\Shared\Models\DomainModel;
 use App\Models\User;
+use App\Support\Documents\DocumentStates;
+use App\Support\Documents\HasDocumentState;
 use App\Support\Money\DecimalCast;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class PurchaseOrder extends DomainModel
 {
+    use HasDocumentState;
+
     protected $table = 'purchase_orders';
+
+    public static function states(): DocumentStates
+    {
+        return new PurchaseOrderStates;
+    }
+
+    /** Every line either fully received or deliberately closed short. */
+    public function isFullyReceived(): bool
+    {
+        return $this->purchaseOrderLines->every(
+            fn (PurchaseOrderLine $line): bool => $line->closed_short
+                || $line->qty_received->isGreaterThanOrEqualTo($line->qty_base),
+        );
+    }
 
     protected function casts(): array
     {

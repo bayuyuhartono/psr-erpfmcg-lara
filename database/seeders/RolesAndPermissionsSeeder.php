@@ -12,8 +12,12 @@ final class RolesAndPermissionsSeeder extends Seeder
     {
         $roles = [
             'Administrator' => ['*' => null],
-            'Finance Manager' => ['accounting.view' => null, 'journal.post' => null, 'payment.approve' => null, 'accounting.period.close' => null],
-            'Warehouse Supervisor' => ['inventory.view' => null, 'stock.adjust.approve' => null, 'stock.transfer.post' => null],
+            'Finance Manager' => ['accounting.view' => null, 'journal.post' => null, 'payment.approve' => null, 'accounting.period.close' => null, 'supplier_invoice.approve_variance' => null, 'supplier_invoice.cancel' => null],
+            'Warehouse Supervisor' => ['inventory.view' => null, 'stock.adjust.approve' => null, 'stock.transfer.post' => null, 'goods_receipt.post' => null, 'goods_receipt.cancel' => null],
+            // Tiered ceilings, the same mechanism as discount approval: a buyer
+            // commits up to 50 million, anything larger goes to the manager.
+            'Purchasing' => ['purchase_order.create' => null, 'purchase_order.approve' => '50000000.00'],
+            'Purchasing Manager' => ['purchase_order.create' => null, 'purchase_order.approve' => null],
             'Sales Supervisor' => ['sales_order.approve' => null, 'discount.approve' => '20.00', 'product.view_cost' => null],
             'Sales Admin' => ['sales_order.create' => null, 'sales_order.view' => null, 'discount.approve' => '5.00'],
         ];

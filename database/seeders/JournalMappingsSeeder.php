@@ -23,6 +23,9 @@ final class JournalMappingsSeeder extends Seeder
             'sales_return' => ['cogs' => '5101', 'inventory' => '1103'],
             'adjustment' => ['inventory' => '1103', 'variance' => '5102'],
             'consignment_settlement' => ['inventory' => '1103', 'payable' => '2101'],
+            // Clears what the receipt parked in GR/IR and owes the supplier for
+            // real. This is the other half of 2103 (F-11).
+            'supplier_invoice' => ['grir' => '2103', 'vat_in' => '1104', 'payable' => '2101'],
             'sales_invoice' => ['receivable' => '1102', 'revenue' => '4101', 'vat_out' => '2102'],
             'payment' => ['cash' => '1101', 'receivable' => '1102'],
         ];

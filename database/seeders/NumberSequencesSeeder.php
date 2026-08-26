@@ -18,6 +18,10 @@ final class NumberSequencesSeeder extends Seeder
     {
         $sequences = [
             ['JE', 'JE/{YY}{MM}/'],
+            ['PO', 'PO/{YY}{MM}/'],
+            ['GR', 'GR/{YY}{MM}/'],
+            ['PR', 'PR/{YY}{MM}/'],
+            ['CLM', 'CLM/{YY}{MM}/'],
         ];
 
         foreach ($sequences as [$type, $prefix]) {

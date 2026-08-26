@@ -4,13 +4,28 @@ namespace App\Domain\Purchasing\Models;
 
 use App\Domain\Inventory\Models\Warehouse;
 use App\Domain\Masters\Models\BusinessPartner;
+use App\Domain\Purchasing\States\GoodsReceiptStates;
 use App\Domain\Shared\Models\DomainModel;
+use App\Support\Documents\DocumentStates;
+use App\Support\Documents\HasDocumentState;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class GoodsReceipt extends DomainModel
 {
+    use HasDocumentState;
+
     protected $table = 'goods_receipts';
+
+    public static function states(): DocumentStates
+    {
+        return new GoodsReceiptStates;
+    }
+
+    protected function casts(): array
+    {
+        return ['receipt_date' => 'immutable_date'];
+    }
 
     public function purchaseOrder(): BelongsTo
     {

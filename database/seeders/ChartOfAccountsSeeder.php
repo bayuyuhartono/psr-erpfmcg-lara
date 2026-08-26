@@ -14,6 +14,8 @@ final class ChartOfAccountsSeeder extends Seeder
             ['1101', 'Cash and Bank', 'asset', true],
             ['1102', 'Trade Receivables', 'asset', false],
             ['1103', 'Inventory', 'asset', false],
+            // PPN masukan: VAT we paid the supplier and reclaim.
+            ['1104', 'VAT Input', 'asset', false],
             ['2101', 'Trade Payables', 'liability', false],
             ['2102', 'VAT Payable', 'liability', false],
             // Goods received but not yet invoiced. The receipt credits this and

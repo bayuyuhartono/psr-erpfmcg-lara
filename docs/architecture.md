@@ -9,7 +9,8 @@ Decided 2026-08-25. Laravel 13, PHP 8.4+, MySQL 9.7, Filament v5.
 > transaction, `StockReversal` undoes one by counter-entry, and `DocumentStates`
 > guards every status change, a document can only post once, and a closed
 > accounting period refuses backdated postings, and `stock:rebuild-balances`
-> proves the cache against the ledger. M1 is complete; M2 masters are next.
+> proves the cache against the ledger. M1, M2 and M3 are complete; M4 inventory
+> operations is next.
 
 ---
 
@@ -303,6 +304,18 @@ Decimal all the way down. Columns are `decimal(18,2)` for money, `decimal(18,4)`
 for quantities and unit costs, created through the `money()`, `qty()`, `cost()`,
 and `percent()` Blueprint macros in `SchemaServiceProvider`. Casts keep them out
 of PHP float arithmetic. Rounding happens once, at presentation.
+
+### Approvals that record a decision
+
+Where a rule can be overridden — a supplier invoice out of tolerance, a
+discount above a threshold, a credit hold — the override is an approval by a
+named person with a permission, not an edit that makes the numbers agree. The
+document keeps saying what it always said; what changes is that someone
+accountable decided to accept it.
+
+`role_permissions.threshold` carries the ceiling where there is one, so
+"may approve" and "may approve *this much*" are different answers with
+different exceptions behind them.
 
 ### Sensitive fields
 

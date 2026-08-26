@@ -23,6 +23,7 @@ final class PurchaseOrderLine extends DomainModel
             'qty' => DecimalCast::class.':4',
             'qty_base' => DecimalCast::class.':4',
             'qty_received' => DecimalCast::class.':4',
+            'closed_short' => 'boolean',
         ];
     }
 

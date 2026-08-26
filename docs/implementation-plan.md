@@ -31,7 +31,7 @@ commented inline in the migration file.
 |---|---|---|---|
 | 0.1 | MySQL configured, database created | ✅ | `.env` + `.env.example` both on MySQL |
 | 0.2 | Blueprint macros: `auditable`, `money`, `qty`, `cost`, `percent` | ✅ | `app/Providers/SchemaServiceProvider.php` — enforces schema §11 "never float" by construction |
-| 0.3 | Full schema migrations, 11 files | ✅ | 78 tables, 150 FKs, 4 CHECK constraints. Two later migrations add what the kernel needed: `stock_ledger.reverses_ledger_id` (1.6) and `document_postings` (1.9), taking it to 79 tables |
+| 0.3 | Full schema migrations, 11 files | ✅ | 78 tables at first, 79 now. Later migrations add what the modules needed: `stock_ledger.reverses_ledger_id` (1.6), `document_postings` (1.9), and `goods_receipt_lines.variance_reason` plus `purchase_order_lines.closed_short` (3.4) |
 | 0.4 | `users` rebuilt as UUID + ERP columns | ✅ | |
 | 0.5 | Up/down/up cycle verified | ✅ | `migrate` → `migrate:reset` → `migrate` clean |
 | 0.6 | Constraint behaviour verified | ✅ | `stock_balances` NULL-key fix, 3 CHECKs, generated `variance` |
@@ -83,17 +83,17 @@ module that skips a step is the one that corrupts inventory.
 
 ---
 
-## M3 — Purchasing
+## M3 — Purchasing `← complete`
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| 3.1 | Purchase order + approval | ⬜ | |
-| 3.2 | Goods receipt with batch + expiry | ⬜ | F-10; one PO line may split across batches |
-| 3.3 | Shelf-life rejection on receipt | ⬜ | F-10; `min_life_on_receipt_pct` **blocks**, server-side, not a warning |
-| 3.4 | Receipt variance vs PO with reason | ⬜ | F-10 |
-| 3.5 | Supplier invoice three-way match | ⬜ | F-11; over-tolerance blocks until supervisor approves. The invoice debits GR/IR clearing (2103) and credits Trade Payables — the receipt already credited clearing, so payables is credited once |
-| 3.6 | Purchase returns | ⬜ | |
-| 3.7 | Principal claims: damaged, expired, recall | ⬜ | Feeds from expiry alerts (F-23) |
+| 3.1 | Purchase order + approval | ✅ | `DraftPurchaseOrder` snapshots the unit, factor, price and discount onto each line and totals the header from them. `PurchaseOrderStates` freezes everything from `pending_approval` on, so the figures being approved stop moving. Approval reads the approver's ceiling from `role_permissions.threshold` — the same mechanism as discount approval — and names both numbers when it refuses |
+| 3.2 | Goods receipt with batch + expiry | ✅ | F-10. `DraftGoodsReceipt` records what arrived and resolves each batch; `PostGoodsReceipt` turns the accepted lines into one posted document and advances the order to partially received or closed. One PO line may arrive as several batches, and the balances stay per batch so FEFO still works |
+| 3.3 | Shelf-life rejection on receipt | ✅ | F-10. Batches resolve at draft, so short-dated goods cannot even be written down as accepted — the receipt records them as a quantity rejected with a reason instead, which is what the supplier claim is built from |
+| 3.4 | Receipt variance vs PO with reason | ✅ | F-10. Over-delivery always needs a reason — it commits money nobody approved. Closing a line short needs one too, and sets `closed_short` so an order the supplier will never complete stops waiting. A plain partial delivery needs nothing: the rest is still coming |
+| 3.5 | Supplier invoice three-way match | ✅ | F-11. Quantity from the receipt, price from the order, amount from the invoice. Over-tolerance blocks until someone with `supplier_invoice.approve_variance` approves it — recorded as an approval, not a quiet edit. Posts DR 2103 + DR 1104 VAT Input / CR 2101, so GR/IR nets to zero. Tolerance is the stricter of a percentage and a flat amount, both in `company_settings` |
+| 3.6 | Purchase returns | ✅ | Stock out through the kernel, DR Trade Payables / CR Inventory. It leaves at the moving average because that is what it is carried at; `unit_price` records what is being claimed back, which is a commercial figure and need not agree |
+| 3.7 | Principal claims: damaged, expired, recall | ✅ | F-23. A commercial document that moves no stock — writing goods off is a separate decision, so goods can be claimed while still on the shelf awaiting collection. The statuses after `submitted` record what the principal decided, and a rejected claim goes back to draft to be argued again |
 
 ---
 
