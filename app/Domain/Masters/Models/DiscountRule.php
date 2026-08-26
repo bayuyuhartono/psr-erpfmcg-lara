@@ -7,6 +7,8 @@ use App\Support\Money\DecimalCast;
 
 final class DiscountRule extends DomainModel
 {
+    protected $table = 'discount_rules';
+
     protected function casts(): array
     {
         return [

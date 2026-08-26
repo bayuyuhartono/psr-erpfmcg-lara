@@ -7,6 +7,8 @@ use App\Support\Money\DecimalCast;
 
 final class CompanySetting extends DomainModel
 {
+    protected $table = 'company_settings';
+
     protected function casts(): array
     {
         return [

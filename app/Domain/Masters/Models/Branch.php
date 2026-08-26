@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Branch extends DomainModel
 {
+    protected $table = 'branches';
+
     public function numberSequences(): HasMany
     {
         return $this->hasMany(NumberSequence::class, 'branch_id');

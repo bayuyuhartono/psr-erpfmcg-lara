@@ -132,11 +132,9 @@ foreach ($models as $table => $meta) {
         $code .= "use {$use};\n";
     }
     $code .= "\nfinal class {$meta['class']} extends {$base}\n{\n";
+    $code .= "    protected \$table = '{$table}';\n\n";
     if ($meta['incrementing']) {
         $code .= "    public \$incrementing = true;\n\n    protected \$keyType = 'int';\n\n";
-    }
-    if ($base === 'PivotModel') {
-        $code .= "    protected \$table = '{$table}';\n\n";
     }
     if (! $meta['auditable'] && $base !== 'PivotModel') {
         if ($meta['created_at'] && ! $meta['updated_at']) {

@@ -49,9 +49,11 @@ class User extends Authenticatable implements FilamentUser
 
     public function hasPermission(string $permission, BigDecimal|string|int|null $amount = null): bool
     {
+        // '*' is how the Administrator role is seeded. Without it here, the one
+        // role that is supposed to be able to do everything can do nothing.
         $grants = $this->roles()->with('rolePermissions')->get()
             ->flatMap->rolePermissions
-            ->where('permission', $permission);
+            ->whereIn('permission', [$permission, '*']);
 
         if ($grants->isEmpty()) {
             return false;

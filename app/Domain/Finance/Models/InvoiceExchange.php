@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class InvoiceExchange extends DomainModel
 {
+    protected $table = 'invoice_exchanges';
+
     protected function casts(): array
     {
         return [

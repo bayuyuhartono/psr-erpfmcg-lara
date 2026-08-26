@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Brand extends DomainModel
 {
+    protected $table = 'brands';
+
     public function principal(): BelongsTo
     {
         return $this->belongsTo(BusinessPartner::class, 'principal_id');

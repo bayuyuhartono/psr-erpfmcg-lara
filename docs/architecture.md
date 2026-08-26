@@ -4,7 +4,12 @@ Decided 2026-08-25. Laravel 13, PHP 8.4+, MySQL 9.7, Filament v5.
 
 > **Status:** the M0 foundation is implemented: the domain tree, Eloquent
 > models, decimal handling, audit observer, numbering service, authorization,
-> seed data, and Filament panel now exist. The posting kernel remains M1 work.
+> seed data, and Filament panel now exist. `StockPosting` and `JournalPoster`
+> are in place — a movement writes ledger, balance, cost, and journal in one
+> transaction, `StockReversal` undoes one by counter-entry, and `DocumentStates`
+> guards every status change, a document can only post once, and a closed
+> accounting period refuses backdated postings, and `stock:rebuild-balances`
+> proves the cache against the ledger. M1 is complete; M2 masters are next.
 
 ---
 
@@ -57,6 +62,7 @@ app/
 
   Support/
     Posting/       StockPosting, JournalPoster, DocumentNumberer
+    Documents/     DocumentStates base, transition guards
     Money/         decimal casts, rounding rules
     Audit/         model observer writing audit_logs
 
@@ -86,16 +92,27 @@ that writes `stock_ledger`. Every goods movement funnels through it:
 ```
 PostGoodsReceipt ─────┐
 ShipDelivery ─────────┤
-PostAdjustment ───────┼──▶ StockPosting::post()
+PostAdjustment ───────┼──▶ StockPosting::postDocument()
 PostStockTransfer ────┤        │
-SettleConsignment ────┤        ├─ 1. append stock_ledger row
-PostSalesReturn ──────┘        ├─ 2. upsert stock_balances
-                               ├─ 3. recompute product_costs  (row-locked)
-                               └─ 4. JournalPoster::post()
+SettleConsignment ────┤        ├─ 0. claim the document  (unique key)
+PostSalesReturn ──────┘        │
+                               └─ per movement:
+                                  ├─ 1. append stock_ledger row
+                                  ├─ 2. upsert stock_balances
+                                  ├─ 3. recompute product_costs  (row-locked)
+                                  └─ 4. JournalPoster::post()
                             all inside one DB transaction
 ```
 
-Four rules, each traceable to a specific failure:
+Modules call `postDocument()`, never the single-movement `post()` underneath
+it. The claim is what makes a double-submitted form, a retried request, or an
+importer run twice post once: `document_postings` has a unique key on the
+document reference, so a race is decided by the database rather than by a
+check two concurrent requests would both pass. A failed posting rolls its claim
+back with everything else, so a corrected resubmission of the same document
+number still works.
+
+Five rules, each traceable to a specific failure:
 
 1. **One transaction.** Ledger, balances, cost, and journal commit together or
    not at all. A partial write is unrecoverable inventory corruption.
@@ -105,9 +122,26 @@ Four rules, each traceable to a specific failure:
 3. **Append only.** Never UPDATE, never DELETE a ledger row. Reversals are new
    negative rows with a counter-journal. This is why `stock_ledger` has no
    `updated_at` or `deleted_at` — the columns would imply an edit path exists.
+   `StockReversal` mirrors a document's rows back through `StockPosting`, so the
+   counter-journal falls out of the sign flip instead of being assembled
+   separately, and each mirror row names the row it cancels in
+   `reverses_ledger_id` — uniquely indexed, so a document cannot be reversed
+   twice even under concurrent cancellation. A reversal backs out the value the
+   original posted, never today's average: re-pricing on the way out would let a
+   cancelled receipt silently revalue stock that was already on hand.
 4. **Balances are a cache.** `stock_balances` must be rebuildable from the ledger
-   at any time, and there is a command that does it. If the rebuild disagrees
-   with the cache, the ledger is right.
+   at any time, and `stock:rebuild-balances` does it. If the rebuild disagrees
+   with the cache, the ledger is right. `--check` is read-only and exits
+   non-zero, so it doubles as a scheduled health check: anything it reports
+   means something wrote stock without going through the kernel.
+5. **A document posts once.** Claimed by unique key, not by asking first. The
+   symptom of getting this wrong is stock that is silently double-counted, which
+   is the failure the whole kernel exists to prevent.
+6. **A closed month stays closed.** `PeriodGuard` is checked by `StockPosting`
+   and by `JournalPoster` separately, because a manual journal touches no stock
+   and a transfer posts no journal — one check would leave a way in. A month
+   with no `accounting_periods` row is open: locking is a decision someone
+   makes, and not having made it is not a lock.
 
 `JournalPoster` reads `journal_mappings` for the document type. **No account
 code is ever hardcoded in posting logic** — clients have different charts of
@@ -168,6 +202,17 @@ Status transitions are explicit and guarded — `draft → posted → cancelled`
 each transition naming who may perform it. This is where posting bugs live: a
 document posted twice, or edited after posting, or cancelled without a reversal.
 A status string updated by hand anywhere in the codebase is a bug.
+
+Each document declares its moves in a `DocumentStates` subclass under its
+context's `States/`, and the `HasDocumentState` trait enforces them:
+`transitionTo()` is the only way a status changes, assigning to `status` and
+saving throws, and a document in a frozen status refuses further edits and
+deletes. Frozen is not stuck — a posted document can still be reversed or
+cancelled; it is its own fields that stop moving, because the correction
+belongs in a counter-entry.
+
+The guards hang off model events, so a mass `update()` on the query builder
+slips past them. Documents are transitioned one at a time, deliberately.
 
 ### Money and quantities
 

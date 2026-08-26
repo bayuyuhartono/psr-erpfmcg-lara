@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class StockCountLine extends DomainModel
 {
+    protected $table = 'stock_count_lines';
+
     protected function casts(): array
     {
         return [

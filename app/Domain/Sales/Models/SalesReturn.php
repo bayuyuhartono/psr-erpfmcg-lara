@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class SalesReturn extends DomainModel
 {
+    protected $table = 'sales_returns';
+
     public function customer(): BelongsTo
     {
         return $this->belongsTo(BusinessPartner::class, 'customer_id');

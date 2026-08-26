@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class PaymentAllocation extends DomainModel
 {
+    protected $table = 'payment_allocations';
+
     protected function casts(): array
     {
         return [

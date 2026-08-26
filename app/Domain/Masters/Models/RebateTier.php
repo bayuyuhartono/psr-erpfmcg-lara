@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class RebateTier extends DomainModel
 {
+    protected $table = 'rebate_tiers';
+
     protected function casts(): array
     {
         return [

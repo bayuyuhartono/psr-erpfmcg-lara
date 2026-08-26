@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class PrincipalClaim extends DomainModel
 {
+    protected $table = 'principal_claims';
+
     protected function casts(): array
     {
         return [

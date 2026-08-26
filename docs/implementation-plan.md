@@ -5,7 +5,7 @@ items, they are the record of what was built and why.
 
 **Status:** ✅ done · 🚧 in progress · ⬜ not started · ⛔ blocked (needs an answer)
 
-**Sources:** [PRD](prd-fmcg-distributor-erp-en.md) · [Schema](fmcg-distributor-erp-schema-en.md) · [Architecture](architecture.md)
+**Sources:** [PRD](prd-fmcg-distributor-erp-en.md) · [Schema](fmcg-distributor-erp-schema-en.md) · [Architecture](architecture.md) · [Known issues](known-issues.md)
 Requirement codes (F-xx) refer to PRD section 7. Where the migrations and the
 schema doc disagree, the migrations are authoritative and the deviation is
 commented inline in the migration file.
@@ -31,7 +31,7 @@ commented inline in the migration file.
 |---|---|---|---|
 | 0.1 | MySQL configured, database created | ✅ | `.env` + `.env.example` both on MySQL |
 | 0.2 | Blueprint macros: `auditable`, `money`, `qty`, `cost`, `percent` | ✅ | `app/Providers/SchemaServiceProvider.php` — enforces schema §11 "never float" by construction |
-| 0.3 | Full schema migrations, 11 files | ✅ | 78 tables, 149 FKs, 4 CHECK constraints |
+| 0.3 | Full schema migrations, 11 files | ✅ | 78 tables, 150 FKs, 4 CHECK constraints. Two later migrations add what the kernel needed: `stock_ledger.reverses_ledger_id` (1.6) and `document_postings` (1.9), taking it to 79 tables |
 | 0.4 | `users` rebuilt as UUID + ERP columns | ✅ | |
 | 0.5 | Up/down/up cycle verified | ✅ | `migrate` → `migrate:reset` → `migrate` clean |
 | 0.6 | Constraint behaviour verified | ✅ | `stock_balances` NULL-key fix, 3 CHECKs, generated `variance` |
@@ -40,15 +40,15 @@ commented inline in the migration file.
 | 0.9 | Decimal casts for money/qty | ✅ | `DecimalCast` exposes `brick/math` `BigDecimal`; scales inferred from migration macros |
 | 0.10 | `OwnedStock` global scope | ✅ | Applied to ledger and balance models; explicit `includingConsigned()` escape hatch |
 | 0.11 | Audit log observer | ✅ | Insert/update/delete old/new JSON; credentials redacted |
-| 0.12 | `DocumentNumberer` service | ✅ | Transaction + `lockForUpdate()` on the configured branch/type/period row |
+| 0.12 | `DocumentNumberer` service | ✅ | Transaction + `lockForUpdate()` on the configured branch/type/period row. Rolls the prefix into a new period by itself, locking the previous period's row first — MySQL keeps NULLs distinct in the unique key, so branch-less sequences would otherwise race |
 | 0.13 | Filament v5 install + panel | ✅ | Filament 5.7 admin panel at `/admin` |
-| 0.14 | Auth, roles, permissions | ✅ | Native roles plus exact decimal threshold ceilings; inactive/unassigned users cannot enter panel |
+| 0.14 | Auth, roles, permissions | ✅ | Native roles plus exact decimal threshold ceilings; inactive/unassigned users cannot enter panel. `hasPermission` honours the Administrator's `*` grant — it matched exactly before, so the one role meant to do everything could do nothing |
 | 0.15 | Seeders: COA, roles, settings, journal mappings | ✅ | Idempotent; verified twice against MySQL |
-| 0.16 | Model factories + test harness | ✅ | PHPUnit with SQLite in-memory; core master/inventory factories and M0 feature tests |
+| 0.16 | Model factories + test harness | ✅ | PHPUnit against MySQL (`psr_erpfmcg_test`); core master/inventory factories and M0 feature tests. SQLite was dropped: it rejects the CHECK constraints and has different `FOR UPDATE` and NULL-in-unique-index semantics, so it tested an engine this product never runs on |
 
 ---
 
-## M1 — Posting kernel `← highest risk, build before anything depends on it`
+## M1 — Posting kernel `← complete`
 
 Schema §11: *exactly one code path writes stock.* Every document that moves
 goods calls the same service — ledger, balances, average cost, journal — or the
@@ -56,15 +56,15 @@ module that skips a step is the one that corrupts inventory.
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| 1.1 | `StockPosting` service | ⬜ | Sole writer of `stock_ledger`; ledger → balance upsert → cost → journal, one transaction |
-| 1.2 | Moving average under `lockForUpdate` | ⬜ | On `product_costs`; PRD risk: wrong the first time two receipts post concurrently |
-| 1.3 | Concurrency test for 1.2 | ⬜ | Parallel receipts must converge on the correct average — load-test early |
-| 1.4 | `JournalPoster` driven by `journal_mappings` | ⬜ | No account code hardcoded in posting logic (F-60) |
-| 1.5 | Document state machine base | ⬜ | Guarded `draft → posted → cancelled`; posted documents are never edited |
-| 1.6 | Reversal by counter-entry | ⬜ | Never UPDATE or DELETE a ledger row (F-10) |
-| 1.7 | Accounting period lock enforcement | ⬜ | Closed period rejects backdated posting (F-60) |
-| 1.8 | `stock:rebuild-balances` command | ⬜ | Recompute the cache from the ledger; proves the ledger is the truth (F-21) |
-| 1.9 | Idempotent posting | ⬜ | Double-submit must not double-post |
+| 1.1 | `StockPosting` service | ✅ | Sole stock writer; ledger → balance → cost → journal in one transaction |
+| 1.2 | Moving average under `lockForUpdate` | ✅ | Owned product cost row serializes postings; outbound issues use the locked average |
+| 1.3 | Concurrency test for 1.2 | ✅ | Two real MySQL processes converge to the correct quantity, value, and average |
+| 1.4 | `JournalPoster` driven by `journal_mappings` | ✅ | Sole writer of `journal_entries`/`journal_lines`; posting keys resolve per client, an unmapped key refuses to post. `StockJournalRules` holds the entry *shape* per `ref_type` — transfers post nothing, consigned-in goods post nothing (F-60) |
+| 1.5 | Document state machine base | ✅ | `DocumentStates` + `HasDocumentState`: declared transitions, per-transition permissions, frozen statuses that refuse edits and deletes. Applied to `journal_entries`; each module declares its own under `States/` as it lands |
+| 1.6 | Reversal by counter-entry | ✅ | `StockReversal` mirrors every ledger row of a document through `StockPosting`, so the counter-journal falls out of the sign flip. Reversals back out their own value, never today's average. `stock_ledger.reverses_ledger_id` is uniquely indexed, so a second reversal is impossible rather than merely checked (F-10) |
+| 1.7 | Accounting period lock enforcement | ✅ | `PeriodGuard` checked by both `StockPosting` and `JournalPoster`, so neither stock nor a manual journal can reach a closed month. A month with no row is open — locking is a decision, not a default. Closing and reopening run through the state machine on `accounting.period.close` (F-60) |
+| 1.8 | `stock:rebuild-balances` command | ✅ | `BalanceRebuilder` compares and corrects; `--check` is read-only and exits non-zero on drift, so it works as a scheduled health check. Consigned balances are rebuilt, not discarded — every query drops the `OwnedStock` scope (F-21) |
+| 1.9 | Idempotent posting | ✅ | `postDocument()` claims the document in `document_postings` before posting any line; the unique key decides a race rather than a check-then-write. Two real processes submitting one document post it once. A failed posting rolls its claim back, so a corrected retry works |
 
 ---
 

@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class SalesOrderLine extends DomainModel
 {
+    protected $table = 'sales_order_lines';
+
     protected function casts(): array
     {
         return [

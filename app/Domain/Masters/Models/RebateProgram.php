@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class RebateProgram extends DomainModel
 {
+    protected $table = 'rebate_programs';
+
     public function principal(): BelongsTo
     {
         return $this->belongsTo(BusinessPartner::class, 'principal_id');

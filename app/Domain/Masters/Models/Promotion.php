@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Promotion extends DomainModel
 {
+    protected $table = 'promotions';
+
     protected function casts(): array
     {
         return [

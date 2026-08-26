@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class ChartOfAccount extends DomainModel
 {
+    protected $table = 'chart_of_accounts';
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(ChartOfAccount::class, 'parent_id');

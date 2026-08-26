@@ -12,7 +12,7 @@ final class RolesAndPermissionsSeeder extends Seeder
     {
         $roles = [
             'Administrator' => ['*' => null],
-            'Finance Manager' => ['accounting.view' => null, 'journal.post' => null, 'payment.approve' => null],
+            'Finance Manager' => ['accounting.view' => null, 'journal.post' => null, 'payment.approve' => null, 'accounting.period.close' => null],
             'Warehouse Supervisor' => ['inventory.view' => null, 'stock.adjust.approve' => null, 'stock.transfer.post' => null],
             'Sales Supervisor' => ['sales_order.approve' => null, 'discount.approve' => '20.00', 'product.view_cost' => null],
             'Sales Admin' => ['sales_order.create' => null, 'sales_order.view' => null, 'discount.approve' => '5.00'],

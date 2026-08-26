@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Category extends DomainModel
 {
+    protected $table = 'categories';
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'parent_id');

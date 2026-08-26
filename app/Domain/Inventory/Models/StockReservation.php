@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class StockReservation extends DomainModel
 {
+    protected $table = 'stock_reservations';
+
     protected function casts(): array
     {
         return [

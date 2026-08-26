@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class SalesReturnLine extends DomainModel
 {
+    protected $table = 'sales_return_lines';
+
     protected function casts(): array
     {
         return [

@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Payment extends DomainModel
 {
+    protected $table = 'payments';
+
     protected function casts(): array
     {
         return [

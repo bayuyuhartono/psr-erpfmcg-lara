@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class StockBalance extends PlainModel
 {
+    protected $table = 'stock_balances';
+
     public const CREATED_AT = null;
 
     protected function casts(): array

@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class PurchaseReturnLine extends DomainModel
 {
+    protected $table = 'purchase_return_lines';
+
     protected function casts(): array
     {
         return [

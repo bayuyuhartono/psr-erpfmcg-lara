@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class SalesInvoiceLine extends DomainModel
 {
+    protected $table = 'sales_invoice_lines';
+
     protected function casts(): array
     {
         return [

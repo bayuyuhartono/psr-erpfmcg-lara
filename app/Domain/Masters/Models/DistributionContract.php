@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class DistributionContract extends DomainModel
 {
+    protected $table = 'distribution_contracts';
+
     protected function casts(): array
     {
         return [

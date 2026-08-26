@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class PartnerAddress extends DomainModel
 {
+    protected $table = 'partner_addresses';
+
     protected function casts(): array
     {
         return [

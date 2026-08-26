@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class PriceList extends DomainModel
 {
+    protected $table = 'price_lists';
+
     public function priceListItems(): HasMany
     {
         return $this->hasMany(PriceListItem::class, 'price_list_id');

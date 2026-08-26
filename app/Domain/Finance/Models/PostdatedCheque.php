@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class PostdatedCheque extends DomainModel
 {
+    protected $table = 'postdated_cheques';
+
     protected function casts(): array
     {
         return [

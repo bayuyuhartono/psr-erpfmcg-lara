@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Role extends DomainModel
 {
+    protected $table = 'roles';
+
     public function rolePermissions(): HasMany
     {
         return $this->hasMany(RolePermission::class, 'role_id');

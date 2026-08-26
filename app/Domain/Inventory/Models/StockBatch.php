@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class StockBatch extends DomainModel
 {
+    protected $table = 'stock_batches';
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class, 'product_id');

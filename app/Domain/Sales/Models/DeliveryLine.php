@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class DeliveryLine extends DomainModel
 {
+    protected $table = 'delivery_lines';
+
     protected function casts(): array
     {
         return [

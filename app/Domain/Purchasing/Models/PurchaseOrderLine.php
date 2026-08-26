@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class PurchaseOrderLine extends DomainModel
 {
+    protected $table = 'purchase_order_lines';
+
     protected function casts(): array
     {
         return [

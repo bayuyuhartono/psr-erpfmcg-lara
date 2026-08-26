@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class JournalLine extends DomainModel
 {
+    protected $table = 'journal_lines';
+
     protected function casts(): array
     {
         return [

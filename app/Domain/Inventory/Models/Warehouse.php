@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Warehouse extends DomainModel
 {
+    protected $table = 'warehouses';
+
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class, 'branch_id');

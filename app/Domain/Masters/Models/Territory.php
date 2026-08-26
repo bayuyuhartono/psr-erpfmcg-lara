@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Territory extends DomainModel
 {
+    protected $table = 'territories';
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(Territory::class, 'parent_id');

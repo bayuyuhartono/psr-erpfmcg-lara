@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class StockAdjustmentLine extends DomainModel
 {
+    protected $table = 'stock_adjustment_lines';
+
     protected function casts(): array
     {
         return [

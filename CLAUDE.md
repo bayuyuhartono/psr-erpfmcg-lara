@@ -32,6 +32,7 @@ password. `mysql -h127.0.0.1 -uroot psr_erpfmcg` connects.
 | [docs/fmcg-distributor-erp-schema-en.md](docs/fmcg-distributor-erp-schema-en.md) | Original schema — **PostgreSQL, and now partly superseded** |
 | [docs/architecture.md](docs/architecture.md) | How the code is organised, and why |
 | [docs/implementation-plan.md](docs/implementation-plan.md) | Task list with per-item status. Keep it current |
+| [docs/known-issues.md](docs/known-issues.md) | Deliberately unfixed problems, and when each starts to bite |
 
 **The migrations are authoritative where they disagree with the schema doc.**
 The doc still says PostgreSQL and still offers FIFO. Deviations are commented
@@ -100,12 +101,24 @@ Per-client variation belongs in data — `journal_mappings`, print templates,
 
 ## Current state
 
-Schema is complete and verified: 78 tables, 149 foreign keys, 4 CHECK
+Schema is complete and verified: 79 tables, 150 foreign keys, 4 CHECK
 constraints, `migrate` → `migrate:reset` → `migrate` clean in both directions.
 
-Not built yet: the `app/Domain` tree, Eloquent models, the posting kernel,
-Filament, and every feature module. See the implementation plan for what is next
+Built: the `app/Domain` tree and Eloquent models, and the posting kernel —
+`StockPosting` (ledger, balance, moving average, journal in one transaction),
+`JournalPoster` (accounts from `journal_mappings`, never hardcoded),
+`StockReversal` (counter-entries, never an edit), `DocumentNumberer`, and the
+`DocumentStates` machinery that makes a hand-assigned status throw.
+
+Modules post through `StockPosting::postDocument()`, not the single-movement
+`post()` underneath it — the document-level claim is what stops a double
+submission double-counting stock.
+
+Not built yet: Filament screens and every feature module. M1 is complete. See the implementation plan for what is next
 and what is blocked on client answers.
+
+Tests run against MySQL (`psr_erpfmcg_test`), not SQLite — the kernel leans on
+`FOR UPDATE`, CHECK constraints, and MySQL's NULL handling in unique indexes.
 
 ## Watch out for
 

@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class StockLedger extends IncrementingModel
 {
+    protected $table = 'stock_ledger';
+
     public $incrementing = true;
 
     protected $keyType = 'int';

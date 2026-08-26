@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class DeliveryPod extends DomainModel
 {
+    protected $table = 'delivery_pods';
+
     protected function casts(): array
     {
         return [

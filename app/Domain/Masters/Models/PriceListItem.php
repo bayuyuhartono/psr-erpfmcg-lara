@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class PriceListItem extends DomainModel
 {
+    protected $table = 'price_list_items';
+
     protected function casts(): array
     {
         return [

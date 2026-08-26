@@ -26,6 +26,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class BusinessPartner extends DomainModel
 {
+    protected $table = 'business_partners';
+
     protected function casts(): array
     {
         return [

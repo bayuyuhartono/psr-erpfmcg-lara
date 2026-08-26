@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class SupplierInvoice extends DomainModel
 {
+    protected $table = 'supplier_invoices';
+
     protected function casts(): array
     {
         return [

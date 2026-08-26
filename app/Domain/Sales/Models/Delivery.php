@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Delivery extends DomainModel
 {
+    protected $table = 'deliveries';
+
     public function customer(): BelongsTo
     {
         return $this->belongsTo(BusinessPartner::class, 'customer_id');

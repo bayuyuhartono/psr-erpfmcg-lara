@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class PrincipalClaimLine extends DomainModel
 {
+    protected $table = 'principal_claim_lines';
+
     protected function casts(): array
     {
         return [

@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class ConsignmentSettlementLine extends DomainModel
 {
+    protected $table = 'consignment_settlement_lines';
+
     protected function casts(): array
     {
         return [

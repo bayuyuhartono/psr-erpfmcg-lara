@@ -27,6 +27,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class Product extends DomainModel
 {
+    protected $table = 'products';
+
     protected function casts(): array
     {
         return [

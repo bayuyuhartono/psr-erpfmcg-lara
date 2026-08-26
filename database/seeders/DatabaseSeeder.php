@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             ChartOfAccountsSeeder::class,
             JournalMappingsSeeder::class,
+            NumberSequencesSeeder::class,
         ]);
     }
 }
