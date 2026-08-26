@@ -42,7 +42,23 @@ final class ShelfLifePolicy
      */
     public function assertAcceptableOnReceipt(Product $product, ?DateTimeInterface $expiry, DateTimeInterface $on): void
     {
-        if (! $product->track_expiry || $product->min_life_on_receipt_pct === null) {
+        if (! $product->track_expiry) {
+            return;
+        }
+
+        // Goods already out of date are refused whether or not a threshold is
+        // configured, the same way expired stock never ships. A percentage of
+        // remaining shelf life is a judgement about how much life is enough;
+        // none at all is not a judgement.
+        if ($expiry !== null && $this->remainingDays($expiry, $on) <= 0) {
+            throw new ShelfLifeTooShort(sprintf(
+                'Product %s expired on %s. Expired goods are not received.',
+                $product->sku,
+                CarbonImmutable::instance($expiry)->format('Y-m-d'),
+            ));
+        }
+
+        if ($product->min_life_on_receipt_pct === null) {
             return;
         }
 

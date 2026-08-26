@@ -9,8 +9,8 @@ Decided 2026-08-25. Laravel 13, PHP 8.4+, MySQL 9.7, Filament v5.
 > transaction, `StockReversal` undoes one by counter-entry, and `DocumentStates`
 > guards every status change, a document can only post once, and a closed
 > accounting period refuses backdated postings, and `stock:rebuild-balances`
-> proves the cache against the ledger. M1, M2 and M3 are complete; M4 inventory
-> operations is next.
+> proves the cache against the ledger. M1 to M4 are complete; M5 sales and
+> delivery is next.
 
 ---
 
@@ -293,7 +293,9 @@ decision someone has to be stopped from making; `isShippable()` returns a
 boolean, because it filters the picking pool and a batch below the threshold is
 simply never offered (F-20).
 
-Expired stock is never shippable, whether or not a threshold is configured.
+Expired stock is never shipped and never received, whether or not a threshold
+is configured. A percentage of remaining shelf life is a judgement about how
+much life is enough; none at all is not a judgement.
 Product settings that cannot work — expiry tracking without batch tracking, a
 receipt percentage of a shelf life that is not set — are refused on the model,
 because a misconfigured product passes every shelf-life check silently.

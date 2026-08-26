@@ -22,6 +22,9 @@ final class NumberSequencesSeeder extends Seeder
             ['GR', 'GR/{YY}{MM}/'],
             ['PR', 'PR/{YY}{MM}/'],
             ['CLM', 'CLM/{YY}{MM}/'],
+            ['SC', 'SC/{YY}{MM}/'],
+            ['ADJ', 'ADJ/{YY}{MM}/'],
+            ['TRF', 'TRF/{YY}{MM}/'],
         ];
 
         foreach ($sequences as [$type, $prefix]) {

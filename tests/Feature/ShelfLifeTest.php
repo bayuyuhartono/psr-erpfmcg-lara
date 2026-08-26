@@ -78,6 +78,22 @@ final class ShelfLifeTest extends TestCase
         ));
     }
 
+    public function test_goods_already_out_of_date_are_never_received(): void
+    {
+        // No threshold configured, so nothing about remaining life is being
+        // judged — and there is still no version of this that is acceptable.
+        $product = $this->perishable(['shelf_life_days' => 180]);
+
+        $this->expectException(ShelfLifeTooShort::class);
+        $this->expectExceptionMessageMatches('/expired on 2026-08-25/');
+
+        app(ShelfLifePolicy::class)->assertAcceptableOnReceipt(
+            $product,
+            new CarbonImmutable('2026-08-25'),
+            new CarbonImmutable('2026-08-26'),
+        );
+    }
+
     public function test_a_product_that_is_not_perishable_is_always_shippable(): void
     {
         $product = Product::factory()->create();

@@ -2,14 +2,29 @@
 
 namespace App\Domain\Inventory\Models;
 
+use App\Domain\Inventory\States\StockAdjustmentStates;
 use App\Domain\Shared\Models\DomainModel;
 use App\Models\User;
+use App\Support\Documents\DocumentStates;
+use App\Support\Documents\HasDocumentState;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class StockAdjustment extends DomainModel
 {
+    use HasDocumentState;
+
     protected $table = 'stock_adjustments';
+
+    public static function states(): DocumentStates
+    {
+        return new StockAdjustmentStates;
+    }
+
+    protected function casts(): array
+    {
+        return ['adjustment_date' => 'immutable_date'];
+    }
 
     public function warehouse(): BelongsTo
     {

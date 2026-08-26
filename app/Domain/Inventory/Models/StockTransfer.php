@@ -2,13 +2,28 @@
 
 namespace App\Domain\Inventory\Models;
 
+use App\Domain\Inventory\States\StockTransferStates;
 use App\Domain\Shared\Models\DomainModel;
+use App\Support\Documents\DocumentStates;
+use App\Support\Documents\HasDocumentState;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class StockTransfer extends DomainModel
 {
+    use HasDocumentState;
+
     protected $table = 'stock_transfers';
+
+    public static function states(): DocumentStates
+    {
+        return new StockTransferStates;
+    }
+
+    protected function casts(): array
+    {
+        return ['transfer_date' => 'immutable_date'];
+    }
 
     public function fromWarehouse(): BelongsTo
     {

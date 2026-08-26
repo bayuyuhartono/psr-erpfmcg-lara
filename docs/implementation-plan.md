@@ -89,7 +89,7 @@ module that skips a step is the one that corrupts inventory.
 |---|---|---|---|
 | 3.1 | Purchase order + approval | ✅ | `DraftPurchaseOrder` snapshots the unit, factor, price and discount onto each line and totals the header from them. `PurchaseOrderStates` freezes everything from `pending_approval` on, so the figures being approved stop moving. Approval reads the approver's ceiling from `role_permissions.threshold` — the same mechanism as discount approval — and names both numbers when it refuses |
 | 3.2 | Goods receipt with batch + expiry | ✅ | F-10. `DraftGoodsReceipt` records what arrived and resolves each batch; `PostGoodsReceipt` turns the accepted lines into one posted document and advances the order to partially received or closed. One PO line may arrive as several batches, and the balances stay per batch so FEFO still works |
-| 3.3 | Shelf-life rejection on receipt | ✅ | F-10. Batches resolve at draft, so short-dated goods cannot even be written down as accepted — the receipt records them as a quantity rejected with a reason instead, which is what the supplier claim is built from |
+| 3.3 | Shelf-life rejection on receipt | ✅ | F-10. Batches resolve at draft, so short-dated goods cannot even be written down as accepted — the receipt records them as a quantity rejected with a reason instead, which is what the supplier claim is built from. Goods already out of date are refused whether or not a threshold is configured |
 | 3.4 | Receipt variance vs PO with reason | ✅ | F-10. Over-delivery always needs a reason — it commits money nobody approved. Closing a line short needs one too, and sets `closed_short` so an order the supplier will never complete stops waiting. A plain partial delivery needs nothing: the rest is still coming |
 | 3.5 | Supplier invoice three-way match | ✅ | F-11. Quantity from the receipt, price from the order, amount from the invoice. Over-tolerance blocks until someone with `supplier_invoice.approve_variance` approves it — recorded as an approval, not a quiet edit. Posts DR 2103 + DR 1104 VAT Input / CR 2101, so GR/IR nets to zero. Tolerance is the stricter of a percentage and a flat amount, both in `company_settings` |
 | 3.6 | Purchase returns | ✅ | Stock out through the kernel, DR Trade Payables / CR Inventory. It leaves at the moving average because that is what it is carried at; `unit_price` records what is being claimed back, which is a commercial figure and need not agree |
@@ -97,19 +97,19 @@ module that skips a step is the one that corrupts inventory.
 
 ---
 
-## M4 — Inventory operations
+## M4 — Inventory operations `← complete`
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| 4.1 | FEFO batch selection at picking | ⬜ | F-20; batch decided at picking, not order entry |
-| 4.2 | Shipping shelf-life filter | ⬜ | F-20; below-threshold batches never offered |
-| 4.3 | Batch override with recorded reason | ⬜ | F-20 |
-| 4.4 | Stock card with source drill-through | ⬜ | F-21 |
-| 4.5 | Stock count, frozen reference balance | ⬜ | F-22; warehouse keeps operating during the count |
-| 4.6 | Variance → adjustment → approval | ⬜ | F-22 |
-| 4.7 | Warehouse transfers | ⬜ | |
-| 4.8 | Expiry alerts by remaining-life band | ⬜ | F-23; rupiah value, not just quantity |
-| 4.9 | Reservation expiry cleanup job | ⬜ | Schema §11; unprocessed orders otherwise lock stock forever |
+| 4.1 | FEFO batch selection at picking | ✅ | F-20. `BatchPicker` allocates nearest expiry first, spreading across batches, honouring the product's `issue_method`. The batch is chosen here and not at order entry, which is why `batch_id` lives on `delivery_lines` |
+| 4.2 | Shipping shelf-life filter | ✅ | F-20. Batches below `min_life_on_ship_days` are excluded before anything is offered, so they are not counted as available either — asking for more than the shippable stock says how much short it is |
+| 4.3 | Batch override with recorded reason | ✅ | F-20. Staff may take a batch out of order with a reason recorded, because overriding FEFO is how stock ages out unnoticed. The override does not lift the shelf-life filter — that is a rule, not an ordering preference |
+| 4.4 | Stock card with source drill-through | ✅ | F-21. Read straight from `stock_ledger`, never from a cache, with a running balance and the document number behind every line. A card for one month opens from everything before it |
+| 4.5 | Stock count, frozen reference balance | ✅ | F-22. `system_qty` is copied onto each line when the count opens, so goods moving during the count change the balance without changing what is being counted against |
+| 4.6 | Variance → adjustment → approval | ✅ | F-22. Closing a count raises a draft adjustment from the variances and nothing else; posting it requires `stock.adjust.approve`. A count that agrees produces no document at all |
+| 4.7 | Warehouse transfers | ✅ | Ship then receive, both through the kernel, no journal — both legs hit the same inventory account. The receiving leg reads the cost off the shipping ledger rows, so moving stock cannot revalue it |
+| 4.8 | Expiry alerts by remaining-life band | ✅ | F-23. Expired / 30 / 60 / 90 days, in rupiah as well as quantity — "Rp 18,400,000 expiring within 30 days" decides itself in a way that "400 units" does not. Consigned-in goods excluded by the `OwnedStock` scope |
+| 4.9 | Reservation expiry cleanup job | ✅ | `stock:release-expired-reservations`, scheduled hourly, with a `--check` that reports without releasing |
 
 ---
 
