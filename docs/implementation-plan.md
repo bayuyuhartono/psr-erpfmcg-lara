@@ -91,7 +91,7 @@ module that skips a step is the one that corrupts inventory.
 | 3.2 | Goods receipt with batch + expiry | ⬜ | F-10; one PO line may split across batches |
 | 3.3 | Shelf-life rejection on receipt | ⬜ | F-10; `min_life_on_receipt_pct` **blocks**, server-side, not a warning |
 | 3.4 | Receipt variance vs PO with reason | ⬜ | F-10 |
-| 3.5 | Supplier invoice three-way match | ⬜ | F-11; over-tolerance blocks until supervisor approves |
+| 3.5 | Supplier invoice three-way match | ⬜ | F-11; over-tolerance blocks until supervisor approves. The invoice debits GR/IR clearing (2103) and credits Trade Payables — the receipt already credited clearing, so payables is credited once |
 | 3.6 | Purchase returns | ⬜ | |
 | 3.7 | Principal claims: damaged, expired, recall | ⬜ | Feeds from expiry alerts (F-23) |
 
@@ -220,6 +220,7 @@ interview script; none of it has been answered yet.
 |---|---|
 | 8.1, 8.5 | Dot matrix or laser? Which model, how many copies? |
 | Costing (locked provisionally) | Does the client's accountant use moving average or FIFO? Irreversible once transactions exist |
+| First live install | Confirm the two accounting choices made for the demo: GR/IR clearing (2103) and Opening Balance Equity (3102). Both are seeder rows, not code |
 | 6.1 | What share of customers use custom invoice-exchange schedules? |
 | 6.4 | What proportion of payments arrive as postdated cheques? |
 | P2.5, P2.6 | Is there consignment to outlets, and how is it reconciled today? |

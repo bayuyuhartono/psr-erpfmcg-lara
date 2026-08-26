@@ -95,7 +95,7 @@ final class AccountingPeriodLockTest extends TestCase
             entryDate: new DateTimeImmutable('2026-07-15'),
             postings: [
                 JournalPosting::debit('inventory', '100.00'),
-                JournalPosting::credit('payable', '100.00'),
+                JournalPosting::credit('grir', '100.00'),
             ],
         ));
     }

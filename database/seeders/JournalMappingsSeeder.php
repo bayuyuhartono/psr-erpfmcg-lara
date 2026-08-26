@@ -14,8 +14,10 @@ final class JournalMappingsSeeder extends Seeder
         // document types of stock movements are the ledger's ref_type values,
         // because that is what StockPosting looks up.
         $mappings = [
-            'goods_receipt' => ['inventory' => '1103', 'payable' => '2101'],
+            'goods_receipt' => ['inventory' => '1103', 'grir' => '2103'],
             'opening_balance' => ['inventory' => '1103', 'opening_equity' => '3102'],
+            // A return is claimed back from the supplier, so it reduces what we
+            // owe rather than what we are waiting to be billed for.
             'purchase_return' => ['inventory' => '1103', 'payable' => '2101'],
             'delivery' => ['cogs' => '5101', 'inventory' => '1103'],
             'sales_return' => ['cogs' => '5101', 'inventory' => '1103'],

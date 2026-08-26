@@ -20,7 +20,10 @@ final class StockJournalRules
 
     /** ref_type => the posting key facing inventory. */
     private const COUNTERPART = [
-        'goods_receipt' => 'payable',
+        // Receiving goods does not yet owe the supplier anything — the
+        // invoice does that. Until it arrives the value sits in a clearing
+        // account, and that balance is goods received but not invoiced.
+        'goods_receipt' => 'grir',
         // Opening stock at go-live faces equity, not an expense: the goods
         // were bought before the system existed and their cost has already
         // been accounted for somewhere else.

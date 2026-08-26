@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Domain\Accounting\Models\JournalEntry;
+use App\Domain\Accounting\Models\JournalLine;
 use App\Domain\Inventory\Models\ProductCost;
 use App\Domain\Inventory\Models\StockBalance;
 use App\Domain\Inventory\Models\StockLedger;
@@ -53,7 +54,9 @@ final class StockPostingTest extends TestCase
         $this->assertSame('posted', $result->journal->status);
         $this->assertSame('goods_receipt', $result->journal->ref_type);
         $this->assertSame(['1103' => '2000.00'], $this->debits($result->journal));
-        $this->assertSame(['2101' => '2000.00'], $this->credits($result->journal));
+        // Receiving goods owes the supplier nothing yet: the value waits in the
+        // goods-received-not-invoiced clearing account until the invoice lands.
+        $this->assertSame(['2103' => '2000.00'], $this->credits($result->journal));
     }
 
     public function test_issue_uses_moving_average_and_reduces_value_atomically(): void
@@ -126,6 +129,20 @@ final class StockPostingTest extends TestCase
             $this->assertDatabaseCount('stock_ledger', 0);
             $this->assertDatabaseCount('stock_balances', 0);
         }
+    }
+
+    public function test_a_receipt_clears_through_grir_so_payables_is_credited_once(): void
+    {
+        [$warehouse, $product] = $this->stockContext();
+        $this->postMovement($warehouse, $product, '10', '100');
+
+        $accounts = JournalLine::with('account')->get()->pluck('account.code')->all();
+
+        // The supplier invoice (3.5) is what credits Trade Payables. If the
+        // receipt did it too, every invoiced receipt would owe the supplier
+        // twice. 2103 is the clearing account the invoice will debit.
+        $this->assertContains('2103', $accounts);
+        $this->assertNotContains('2101', $accounts);
     }
 
     public function test_warehouse_transfers_post_no_journal(): void

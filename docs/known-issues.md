@@ -5,27 +5,19 @@ Each entry says what breaks, when it starts mattering, and what fixing it looks
 like. Delete an entry when it is fixed — the implementation plan is the record
 of what was built, this file is only the record of what was not.
 
+Two accounting choices here were made without an accountant, because this is
+still a demo: a **GR/IR clearing account** (2103) that the goods receipt credits
+and the supplier invoice will clear, and **Opening Balance Equity** (3102) for
+imported opening stock. Both are standard, and both are rows in
+`ChartOfAccountsSeeder` and `JournalMappingsSeeder` — a real client's accountant
+can overrule either without a code change. Confirm before the first live
+install.
+
 ---
 
 ## Open
 
-### 1. Goods receipt credits Trade Payables directly — no GR/IR clearing account
-
-`JournalMappingsSeeder` maps `goods_receipt.payable` to 2101, the same account
-the supplier invoice will credit at 3.5. Both posting the same liability
-double-counts payables for every receipt that has an invoice.
-
-Standard practice is a GR/IR clearing account: the receipt credits clearing, the
-invoice debits clearing and credits payables, and the balance in clearing is
-goods received but not yet invoiced — which is also what the three-way match
-(F-11) reconciles against.
-
-**Bites at:** 3.5, supplier invoice three-way match.
-**Fix:** one account in `ChartOfAccountsSeeder`, one row in
-`JournalMappingsSeeder`. No code change — that is the point of `journal_mappings`.
-**Needs:** the client's accountant to confirm, since it changes the chart.
-
-### 2. Mass `update()` bypasses the document state guards
+### 1. Mass `update()` bypasses the document state guards
 
 `HasDocumentState` hangs its guards off model events. `Model::query()->update(['status' => 'posted'])`
 does not fire them, so a bulk update can move documents into any status, past
@@ -36,7 +28,7 @@ every transition rule and permission check.
 **Fix:** either forbid it in review, or override `newEloquentBuilder()` on
 document models so `update()` refuses when `status` is among the columns.
 
-### 3. Every stock posting queues on one journal number sequence row
+### 2. Every stock posting queues on one journal number sequence row
 
 `JournalPoster` numbers each entry through `DocumentNumberer`, which locks the
 branch-less `JE` sequence row for the rest of the transaction. Every concurrent
@@ -51,7 +43,7 @@ to look at if the load test is slow.
 **Fix:** if measurement shows it matters — number journals per branch, or move
 numbering to the end of the transaction so the lock is held for less of it.
 
-### 4. `number_sequences` unique key does not constrain branch-less rows
+### 3. `number_sequences` unique key does not constrain branch-less rows
 
 The key is `(branch_id, document_type, period)`, and MySQL treats NULLs as
 distinct in a unique index. Nothing at the database level stops two rows for
@@ -67,7 +59,7 @@ rows another way — a seeder, an admin screen — is not protected.
 that, or refuse branch-less sequences and give installation-wide documents a
 default branch.
 
-### 5. `StockPosting`'s deadlock retry stops working the moment a module wraps it
+### 4. `StockPosting`'s deadlock retry stops working the moment a module wraps it
 
 `StockPosting::post()` passes `attempts: 3` to `DB::transaction()`. That retry
 only happens when the posting is the outermost transaction. Laravel refuses to
@@ -88,7 +80,7 @@ from the first module.
 and drop the misleading attempt count from `StockPosting`. Worth a concurrency
 test that wraps a posting the way a module will.
 
-### 6. Nothing physically stops a module skipping the posting claim
+### 5. Nothing physically stops a module skipping the posting claim
 
 `StockPosting::postDocument()` claims the document before posting; the
 single-movement `post()` underneath it does not, because `StockReversal` needs
@@ -104,7 +96,7 @@ method. Silent: the symptom is a document that posts twice.
 `StockReversal` is a bug. If it happens twice, move reversal onto its own entry
 point and make `post()` private.
 
-### 7. Where consigned-in stock physically sits is still undecided
+### 6. Where consigned-in stock physically sits is still undecided
 
 Schema §7 says inbound consignment works through `owner_id`, with the goods in
 "a real warehouse". Section 4 also defines a `consignment_in` warehouse type
@@ -125,7 +117,7 @@ valuation reports have to filter on.
 assertion to `StockPosting::validate()`. A settlement moving goods into our
 ownership while they sit still is the case that decides it.
 
-### 8. Kernel-posted journal entries carry no description
+### 7. Kernel-posted journal entries carry no description
 
 `StockPosting` posts entries with `ref_type` and `ref_id` set but `description`
 null, so a general ledger listing shows blank narration on every automatic line.

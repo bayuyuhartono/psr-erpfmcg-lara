@@ -157,7 +157,7 @@ final class DocumentStateTest extends TestCase
             entryDate: new DateTimeImmutable('2026-08-25'),
             postings: [
                 JournalPosting::debit('inventory', '100.00'),
-                JournalPosting::credit('payable', '100.00'),
+                JournalPosting::credit('grir', '100.00'),
             ],
         ));
     }

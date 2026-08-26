@@ -88,8 +88,8 @@ final class StockReversalTest extends TestCase
         $this->assertStringContainsString('Reversal of goods_receipt', $counter->description);
 
         // Every account the original debited, the counter-entry credits.
-        $this->assertEquals(['1103' => 'debit', '2101' => 'credit'], $this->sides($original));
-        $this->assertEquals(['1103' => 'credit', '2101' => 'debit'], $this->sides($counter));
+        $this->assertEquals(['1103' => 'debit', '2103' => 'credit'], $this->sides($original));
+        $this->assertEquals(['1103' => 'credit', '2103' => 'debit'], $this->sides($counter));
         $this->assertSame(
             $original->journalLines->sum(fn ($line) => (string) $line->debit),
             $counter->journalLines->sum(fn ($line) => (string) $line->credit),

@@ -16,6 +16,11 @@ final class ChartOfAccountsSeeder extends Seeder
             ['1103', 'Inventory', 'asset', false],
             ['2101', 'Trade Payables', 'liability', false],
             ['2102', 'VAT Payable', 'liability', false],
+            // Goods received but not yet invoiced. The receipt credits this and
+            // the supplier invoice clears it, so payables is not credited twice
+            // for the same goods — and the balance here is what the three-way
+            // match reconciles against (F-11).
+            ['2103', 'Goods Received Not Invoiced', 'liability', false],
             ['3101', 'Retained Earnings', 'equity', false],
             // Balances the opening stock import. Without it the whole opening
             // inventory lands in an expense variance in month one.

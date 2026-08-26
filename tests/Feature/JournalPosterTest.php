@@ -32,7 +32,7 @@ final class JournalPosterTest extends TestCase
     {
         $entry = $this->postEntry([
             JournalPosting::debit('inventory', '1500.00'),
-            JournalPosting::credit('payable', '1500.00'),
+            JournalPosting::credit('grir', '1500.00'),
         ]);
 
         $this->assertSame('posted', $entry->status);
@@ -42,8 +42,8 @@ final class JournalPosterTest extends TestCase
         $lines = $entry->journalLines->keyBy(fn ($line) => $line->account->code);
         $this->assertSame('1500.00', (string) $lines['1103']->debit);
         $this->assertSame('0.00', (string) $lines['1103']->credit);
-        $this->assertSame('1500.00', (string) $lines['2101']->credit);
-        $this->assertSame('0.00', (string) $lines['2101']->debit);
+        $this->assertSame('1500.00', (string) $lines['2103']->credit);
+        $this->assertSame('0.00', (string) $lines['2103']->debit);
     }
 
     public function test_a_remapped_account_changes_where_the_same_posting_lands(): void
@@ -51,12 +51,12 @@ final class JournalPosterTest extends TestCase
         // The per-client escape hatch: configuration, never a code change.
         $variance = DB::table('chart_of_accounts')->where('code', '5102')->value('id');
         DB::table('journal_mappings')
-            ->where(['document_type' => 'goods_receipt', 'posting_key' => 'payable'])
+            ->where(['document_type' => 'goods_receipt', 'posting_key' => 'grir'])
             ->update(['account_id' => $variance]);
 
         $entry = $this->postEntry([
             JournalPosting::debit('inventory', '10.00'),
-            JournalPosting::credit('payable', '10.00'),
+            JournalPosting::credit('grir', '10.00'),
         ]);
 
         $this->assertSame(
@@ -67,8 +67,8 @@ final class JournalPosterTest extends TestCase
 
     public function test_the_entry_takes_its_number_from_the_locked_sequence(): void
     {
-        $first = $this->postEntry([JournalPosting::debit('inventory', '1.00'), JournalPosting::credit('payable', '1.00')]);
-        $second = $this->postEntry([JournalPosting::debit('inventory', '1.00'), JournalPosting::credit('payable', '1.00')]);
+        $first = $this->postEntry([JournalPosting::debit('inventory', '1.00'), JournalPosting::credit('grir', '1.00')]);
+        $second = $this->postEntry([JournalPosting::debit('inventory', '1.00'), JournalPosting::credit('grir', '1.00')]);
 
         $this->assertSame('JE/2608/000001', $first->document_number);
         $this->assertSame('JE/2608/000002', $second->document_number);
@@ -81,7 +81,7 @@ final class JournalPosterTest extends TestCase
         try {
             $this->postEntry([
                 JournalPosting::debit('inventory', '100.00'),
-                JournalPosting::credit('payable', '99.99'),
+                JournalPosting::credit('grir', '99.99'),
             ]);
         } finally {
             $this->assertDatabaseCount('journal_entries', 0);
@@ -97,22 +97,22 @@ final class JournalPosterTest extends TestCase
 
         $this->postEntry([
             JournalPosting::debit('inventory', '-100.00'),
-            JournalPosting::credit('payable', '-100.00'),
+            JournalPosting::credit('grir', '-100.00'),
         ]);
     }
 
     public function test_an_unmapped_posting_key_names_what_is_missing(): void
     {
         DB::table('journal_mappings')
-            ->where(['document_type' => 'goods_receipt', 'posting_key' => 'payable'])
+            ->where(['document_type' => 'goods_receipt', 'posting_key' => 'grir'])
             ->delete();
 
         $this->expectException(UnmappedAccount::class);
-        $this->expectExceptionMessageMatches('/goods_receipt.*payable/');
+        $this->expectExceptionMessageMatches('/goods_receipt.*grir/');
 
         $this->postEntry([
             JournalPosting::debit('inventory', '100.00'),
-            JournalPosting::credit('payable', '100.00'),
+            JournalPosting::credit('grir', '100.00'),
         ]);
     }
 

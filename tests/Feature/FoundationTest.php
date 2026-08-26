@@ -91,7 +91,7 @@ final class FoundationTest extends TestCase
 
         $this->assertDatabaseCount('company_settings', 1);
         $this->assertDatabaseCount('roles', 5);
-        $this->assertDatabaseCount('chart_of_accounts', 10);
+        $this->assertDatabaseCount('chart_of_accounts', 11);
         $this->assertDatabaseCount('journal_mappings', 19);
         $this->assertDatabaseCount('number_sequences', 1);
     }
