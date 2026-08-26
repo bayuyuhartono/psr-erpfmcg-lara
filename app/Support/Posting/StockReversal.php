@@ -9,7 +9,6 @@ use App\Support\Posting\Exceptions\AlreadyReversed;
 use App\Support\Posting\Exceptions\NothingToReverse;
 use Carbon\CarbonImmutable;
 use DateTimeInterface;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Undoes a posted document by posting its opposite.
@@ -47,7 +46,7 @@ final class StockReversal
         ?string $partnerId = null,
         ?string $branchId = null,
     ): StockReversalResult {
-        return DB::transaction(function () use (
+        return PostingTransaction::run(function () use (
             $referenceType, $referenceId, $actor, $date, $description, $partnerId, $branchId
         ): StockReversalResult {
             $originals = StockLedger::withoutGlobalScopes()

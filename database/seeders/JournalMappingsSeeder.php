@@ -27,7 +27,15 @@ final class JournalMappingsSeeder extends Seeder
             // real. This is the other half of 2103 (F-11).
             'supplier_invoice' => ['grir' => '2103', 'vat_in' => '1104', 'payable' => '2101'],
             'sales_invoice' => ['receivable' => '1102', 'revenue' => '4101', 'vat_out' => '2102'],
-            'payment' => ['cash' => '1101', 'receivable' => '1102'],
+            // Collections. Cash in clears the receivable; anything beyond it
+            // is held as an advance rather than booked as income.
+            'payment' => ['cash' => '1101', 'receivable' => '1102', 'advance' => '2104'],
+            'supplier_payment' => ['cash' => '1101', 'payable' => '2101'],
+            // A cheque moves the debt from the customer to the cheque itself,
+            // and only becomes cash when it clears (F-51).
+            'cheque_received' => ['cheque' => '1105', 'receivable' => '1102'],
+            'cheque_cleared' => ['cash' => '1101', 'cheque' => '1105'],
+            'cheque_bounced' => ['receivable' => '1102', 'cheque' => '1105'],
         ];
 
         foreach ($mappings as $type => $keys) {

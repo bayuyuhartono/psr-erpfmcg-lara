@@ -6,9 +6,9 @@ use App\Domain\Inventory\Exceptions\InvalidStockAdjustment;
 use App\Domain\Inventory\Models\StockAdjustment;
 use App\Domain\Inventory\Models\StockAdjustmentLine;
 use App\Models\User;
+use App\Support\Posting\PostingTransaction;
 use App\Support\Posting\StockMovement;
 use App\Support\Posting\StockPosting;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Writes an approved adjustment into stock.
@@ -40,7 +40,11 @@ final class PostStockAdjustment
             throw new InvalidStockAdjustment(sprintf('Adjustment %s has no lines.', $adjustment->document_number));
         }
 
-        return DB::transaction(function () use ($adjustment, $lines, $actor): StockAdjustment {
+        return PostingTransaction::run(function () use ($adjustment, $lines, $actor): StockAdjustment {
+            // A deadlock retry re-runs this closure, and $adjustment still
+            // carries whatever the rolled-back attempt put on it.
+            $adjustment->refresh();
+
             $adjustment->transitionTo('posted', $actor);
 
             $this->posting->postDocument($lines->map(fn (StockAdjustmentLine $line): StockMovement => new StockMovement(

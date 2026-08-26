@@ -7,11 +7,11 @@ use App\Domain\Purchasing\Exceptions\InvalidPrincipalClaim;
 use App\Domain\Purchasing\Models\PrincipalClaim;
 use App\Domain\Purchasing\Models\PrincipalClaimLine;
 use App\Support\Posting\DocumentNumberer;
+use App\Support\Posting\PostingTransaction;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
 use Carbon\CarbonImmutable;
 use DateTimeInterface;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Claims expired, damaged or recalled goods back from the principal (F-23).
@@ -48,7 +48,7 @@ final class RaisePrincipalClaim
 
         $claimDate = CarbonImmutable::instance($claimDate ?? CarbonImmutable::now())->startOfDay();
 
-        return DB::transaction(function () use ($principal, $claimType, $lines, $claimDate): PrincipalClaim {
+        return PostingTransaction::run(function () use ($principal, $claimType, $lines, $claimDate): PrincipalClaim {
             $claim = PrincipalClaim::create([
                 'document_number' => $this->numberer->next('CLM', $claimDate),
                 'principal_id' => $principal->getKey(),

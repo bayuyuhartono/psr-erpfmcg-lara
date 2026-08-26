@@ -4,13 +4,31 @@ namespace App\Domain\Sales\Models;
 
 use App\Domain\Inventory\Models\Warehouse;
 use App\Domain\Masters\Models\BusinessPartner;
+use App\Domain\Sales\States\SalesReturnStates;
 use App\Domain\Shared\Models\DomainModel;
+use App\Support\Documents\DocumentStates;
+use App\Support\Documents\HasDocumentState;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class SalesReturn extends DomainModel
 {
+    use HasDocumentState;
+
     protected $table = 'sales_returns';
+
+    public static function states(): DocumentStates
+    {
+        return new SalesReturnStates;
+    }
+
+    protected function casts(): array
+    {
+        return [
+            'resellable' => 'boolean',
+            'return_date' => 'immutable_date',
+        ];
+    }
 
     public function customer(): BelongsTo
     {

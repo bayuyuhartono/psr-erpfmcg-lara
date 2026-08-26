@@ -117,17 +117,17 @@ module that skips a step is the one that corrupts inventory.
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| 5.1 | Sales order entry, keyboard-driven | ⬜ | **F-31: 10 lines under 2 minutes** — see Risk watch |
-| 5.2 | Product search < 300 ms across 5,000 SKUs | ⬜ | Code, name, barcode, as you type |
-| 5.3 | Credit limit + overdue hold | ⬜ | F-30; automatic on save, release is role-gated and logged |
-| 5.4 | Tiered discounts + bonus goods | ⬜ | F-32; bonus leaves stock at zero revenue, still carries cost |
-| 5.5 | Stock reservation on approval | ⬜ | F-33 |
-| 5.6 | Copy-from-previous-order | ⬜ | F-31 |
-| 5.7 | Picking list sorted by rack | ⬜ | F-40 |
-| 5.8 | One delivery, multiple orders | ⬜ | F-41 |
-| 5.9 | Proof of delivery, accepted qty | ⬜ | F-42 |
-| 5.10 | Invoice from confirmed delivery | ⬜ | F-42; shortfall raises return or adjustment |
-| 5.11 | Sales returns, resellable routing | ⬜ | Non-resellable goes to the damaged warehouse |
+| 5.1 | Sales order entry, keyboard-driven | 🚧 | F-31. Custom Livewire page, fully keyboard-operable: type, ↑↓ to choose, Enter to add, cursor back in the box. Customer chosen by typing too. **Measured across 5,000 SKUs and 2,000 outlets: 25 ms customer lookup, 33 ms per line, 0.33s for ten lines and the save** — so 119.7 of the 120 seconds belong to the typist. Every written criterion is met; only the stopwatch itself is outstanding, and it needs a real sales admin |
+| 5.2 | Product search < 300 ms across 5,000 SKUs | ✅ | Code, name and barcode in one query, exact code first. **Measured 28 ms worst case across 5,000 SKUs** against a 300 ms target |
+| 5.3 | Credit limit + overdue hold | ✅ | F-30. Runs on submit with no way to skip it. `credit_hold` is a state, so releasing is a transition gated on `sales_order.release_hold` with the releaser recorded. `hold_detail` keeps the figures that triggered it |
+| 5.4 | Tiered discounts + bonus goods | ✅ | F-32. Each tier snapshotted separately, so an invoice can be explained as 5% then 3%. Bonus lines are ordinary lines at zero revenue whose quantity still leaves the warehouse and carries its cost |
+| 5.5 | Stock reservation on approval | ✅ | F-33. Reserved when the order is approved, consumed when the load ships, expired by the hourly job if neither happens |
+| 5.6 | Copy-from-previous-order | ✅ | F-31. Quantities and units carry over; prices are re-quoted at today's list, because copying last month's price forward is how an old promotion becomes permanent |
+| 5.7 | Picking list sorted by rack | ✅ | F-40. Sorted by `pick_sequence` with unsequenced bays last, so the picker walks the racks once |
+| 5.8 | One delivery, multiple orders | ✅ | F-41. One trip, one document — refused across customers or warehouses |
+| 5.9 | Proof of delivery, accepted qty | ✅ | F-42. Full, partial or refused; a refused load fails the delivery rather than pretending it arrived |
+| 5.10 | Invoice from confirmed delivery | ✅ | F-42. Billed on `qty_accepted`, priced from the order line's snapshot. Cost of goods is recognised when the load leaves, revenue only when the outlet confirms — a load that comes back is not a sale. A shortfall raises a draft return for the goods on the truck |
+| 5.11 | Sales returns, resellable routing | ✅ | Enforced both ways: unsellable goods are refused a normal warehouse, and resellable goods are refused the damaged one, where nothing is ever picked |
 
 ---
 
@@ -138,28 +138,28 @@ most common reason a new system gets rejected.*
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| 6.1 | Invoice exchange batches per schedule | ⬜ | F-50; `invoice_exchange_days` per customer |
-| 6.2 | Printable, signable exchange receipt | ⬜ | F-50 |
-| 6.3 | Promised payment date → reminders | ⬜ | F-50 |
-| 6.4 | Postdated cheque lifecycle | ⬜ | F-51; held → deposited → cleared → bounced, not cash until cleared |
-| 6.5 | Bounced cheque reopens the invoice | ⬜ | F-51; plus an alert |
-| 6.6 | Payment allocation across invoices | ⬜ | F-52; remainder held as advance |
-| 6.7 | Receivables aging by customer and salesperson | ⬜ | F-53 |
-| 6.8 | Payables and supplier payments | ⬜ | |
+| 6.1 | Invoice exchange batches per schedule | ✅ | F-50. `ExchangeSchedule` answers whose day it is; `AssembleInvoiceExchange` gathers their posted invoices and sets the promised payment date from the customer's own payment days, falling back to invoice terms |
+| 6.2 | Printable, signable exchange receipt | 🚧 | F-50. The document and `received_by` exist and handing over transitions its invoices to `exchanged`. The printed layout waits for M8, which is blocked on the client's printer |
+| 6.3 | Promised payment date → reminders | ✅ | F-50. `collections:today`, scheduled daily at 07:00: whose invoices go out today, and who promised to pay by now and has not |
+| 6.4 | Postdated cheque lifecycle | ✅ | F-51. Receiving one moves the debt to 1105 Postdated Cheques Receivable and leaves cash untouched, so the cash position never counts a drawer of promises. Clearing is what makes it money |
+| 6.5 | Bounced cheque reopens the invoice | ✅ | F-51. The debt goes back to the customer and the invoice returns to unpaid. `paid` is deliberately not a final state for this reason — an invoice that could not reopen would stay settled on money that never arrived |
+| 6.6 | Payment allocation across invoices | ✅ | F-52. One payment across many invoices, one invoice in instalments, and the remainder credited to 2104 Customer Advances rather than booked as income — it is still the customer's money |
+| 6.7 | Receivables aging by customer and salesperson | ✅ | F-53. Not yet due / 1–30 / 31–60 / 61–90 / over 90, ranked by customer and by salesperson — they answer different questions |
+| 6.8 | Payables and supplier payments | ✅ | DR Trade Payables / CR Cash. No advance on this side: money paid beyond what is owed is refused, because a supplier holding our money is a conversation, not a bookkeeping entry |
 
 ---
 
-## M7 — Accounting
+## M7 — Accounting `← complete`
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| 7.1 | Chart of accounts + mapping UI | ⬜ | Per-client configuration, not code |
-| 7.2 | Automatic journals from every document | ⬜ | F-60; via `JournalPoster` (1.4) |
-| 7.3 | Manual journals for adjustments | ⬜ | F-60 |
-| 7.4 | General ledger | ⬜ | |
-| 7.5 | P&L and balance sheet with drill-down | ⬜ | F-61 |
-| 7.6 | Inventory valuation excludes consigned-in | ⬜ | Schema §11; `owner_id IS NULL` or the balance sheet is overstated |
-| 7.7 | Period close under 2 minutes | ⬜ | NFR |
+| 7.1 | Chart of accounts + mapping UI | ✅ | The screen that is the reason no account code appears in posting logic. A test proves remapping `goods_receipt.grir` sends the next receipt somewhere else, with no code change |
+| 7.2 | Automatic journals from every document | ✅ | F-60. A full buy-and-sell cycle is tested to leave a journal behind every document, no drafts, every entry balancing |
+| 7.3 | Manual journals for adjustments | ✅ | F-60. `JournalPoster::postManual()` names accounts directly — there is no document type to map from — but still goes through the same balance check, period lock and `journal.post` permission |
+| 7.4 | General ledger | ✅ | Posted entries only, with opening balance, running balance and the source document on every line. Credit-side accounts report in the direction they carry, so a payable is not a negative debit |
+| 7.5 | P&L and balance sheet with drill-down | ✅ | F-61. Every figure is a list of accounts, each drilling to its ledger and on to the documents. The balance sheet carries the year's profit itself, since it is not in a nominal account until the year closes |
+| 7.6 | Inventory valuation excludes consigned-in | ✅ | Schema §11. Reconciles stock value against the mapped inventory account and reports what was excluded, so the principal's goods are visibly left out rather than silently |
+| 7.7 | Period close under 2 minutes | ✅ | **Measured at 0.01s.** Refuses to close over an unposted journal or a stock figure that disagrees with the inventory account; `--force` is available once the difference is understood |
 
 ---
 
@@ -170,27 +170,34 @@ rejection risk.*
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| 8.1 | Dot matrix continuous form, 2–3 copies | ⛔ | Needs the client's actual printer model and copy count |
-| 8.2 | Per-client layout without code changes | ⬜ | Template data, not forked code |
-| 8.3 | A4 / PDF invoice | ⬜ | |
-| 8.4 | Delivery note, exchange receipt | ⬜ | |
-| 8.5 | Test against a real dot matrix printer | ⛔ | Must happen **before** the first demo |
-| 8.6 | Reports: stock card, aging, sales by product/brand/customer/salesperson, gross margin | ⬜ | Under 5 seconds across a year of data |
+| 8.1 | Dot matrix continuous form, 2–3 copies | 🚧 | Layouts exist at 80 columns with fixed-width padding, printed as one run separated by form feeds. Tested that no line runs past the paper and columns hold position. Still ⛔ on the client's printer model, width and copy count before the numbers mean anything |
+| 8.2 | Per-client layout without code changes | ✅ | `print_templates` rows, edited on a screen. A test rewrites a layout and prints the same invoice differently with no code change. The syntax is deliberately not Blade — a layout is edited by an administrator, and Blade from the database is arbitrary PHP |
+| 8.3 | A4 / PDF invoice | 🚧 | A4 renders as HTML for a browser or laser printer, from the same template mechanism. Server-side PDF needs a library; not added, because nothing yet requires emailing one |
+| 8.4 | Delivery note, exchange receipt | ✅ | Both print from the same mechanism. The exchange receipt lists its invoices and is signable, which is what makes it the document the outlet keeps (F-50) |
+| 8.5 | Test against a real dot matrix printer | ⛔ | Must happen **before** the first demo. The layouts exist so this test is possible, not so it is skipped — nothing about column positions is confirmed until paper comes out of the client's machine |
+| 8.6 | Reports: stock card, aging, sales by product/brand/customer/salesperson, gross margin | ✅ | All five. Margin is revenue against the cost the goods actually left at, taken from the delivery lines, not a price-list guess. **Measured 0.10s worst case across 25,000 invoice lines** against a 5s NFR |
 
 ---
 
 ## M9 — Deployment and hardening
 
+The load test at 9.7 was worth more than the number it produced. Under
+twenty-five concurrent users it found three bugs that no single-threaded test
+could: the deadlock retry that never ran, a lock upgrade in the moving-average
+path, and a `product_costs` row created lazily on first movement. Before the
+fixes, 58% of documents were lost on a contended product.
+
+
 | # | Item | Status | Notes |
 |---|---|---|---|
-| 9.1 | Numbered migrations applied on update | ⬜ | Mandatory from first release — every client is a separate installation |
-| 9.2 | Remote update + offline update package | ⬜ | Some clients have no external access |
-| 9.3 | Schema version recorded per installation | ⬜ | |
-| 9.4 | Daily backup, local + offsite | ⬜ | |
-| 9.5 | **Restore procedure actually tested** | ⬜ | Not merely documented |
-| 9.6 | License enforcement | ⬜ | `licenses` table exists, no enforcement designed yet |
-| 9.7 | Load test: 25 concurrent users | ⬜ | |
-| 9.8 | Install + operations runbook | ⬜ | |
+| 9.1 | Numbered migrations applied on update | ✅ | `app:update` backs up first, applies pending migrations in order, clears caches and reports the new version. The backup is not a flag: the one time it would be skipped is the one time it was needed |
+| 9.2 | Remote update + offline update package | ✅ | `app:package` builds a zip carrying `vendor/` already built, so a server with no internet needs only to unpack and run `app:update`. It deliberately excludes `.env`, `storage/` and the database — those belong to the installation |
+| 9.3 | Schema version recorded per installation | ✅ | `app:version` reports the last migration applied, how many are waiting, and the code commit. Non-zero exit when work is pending, so a deployment script notices. The schema doc's `schema_migrations` table was never built — Laravel's `migrations` table already is one, and a second copy is a second thing to get out of step |
+| 9.4 | Daily backup, local + offsite | 🚧 | A manual backup screen: take one, download it, delete it. Scheduling and offsite copying wait on knowing the server and where offsite is (PRD §10 Q14) — the button an administrator presses before an upgrade did not need to wait for that |
+| 9.5 | **Restore procedure actually tested** | ✅ | Literally. A test dumps a database holding posted documents, restores the file into a scratch schema, and compares row counts and ledger values. `--set-gtid-purged=OFF` was needed or the dump could not be restored onto the same server at all. The screen has the same check as a button |
+| 9.6 | License enforcement | ✅ | **Sold, not rented: the software has no expiry and never stops working.** Two things are enforced, neither able to lock anyone out of work already done — seats, checked when a user is *activated* rather than at login, and modules that were not bought. `expires_on` is renamed `supported_until`: reported, never enforced |
+| 9.7 | Load test: 25 concurrent users | ✅ | Twenty-five real processes posting goods receipts, on separate products and on one shared product. **~150–200 documents/sec, median 100–150 ms, zero lost work in both.** It found three real concurrency bugs — see below |
+| 9.8 | Install + operations runbook | ✅ | [runbook.md](runbook.md) — install, update, roll back, month end, and what to run when something looks wrong. Server-specific steps are marked **[server]** and still depend on PRD §10 Q14 |
 
 ---
 

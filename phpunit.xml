@@ -18,6 +18,12 @@
         </include>
     </source>
     <php>
+        <!-- The acceptance-criterion tests build the volumes the PRD names:
+             3,000 opening stock rows (F-02) and 5,000 SKUs with 2,000 outlets
+             (F-31). Each needs about 80 MB, and PHP's CLI default of 128 MB
+             does not fit one of them alongside the rest of the suite in a
+             single process. -->
+        <ini name="memory_limit" value="512M"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>

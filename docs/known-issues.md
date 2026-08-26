@@ -30,18 +30,13 @@ document models so `update()` refuses when `status` is among the columns.
 
 ### 2. Every stock posting queues on one journal number sequence row
 
-`JournalPoster` numbers each entry through `DocumentNumberer`, which locks the
-branch-less `JE` sequence row for the rest of the transaction. Every concurrent
-goods movement therefore serialises on that single row, on top of the
-`product_costs` lock it already takes.
+**Measured at 9.7 and not a problem.** Twenty-five concurrent users sustain
+150–200 documents per second through that single lock, with a median latency
+around 100–150 ms. A distributor would need roughly nine thousand documents a
+minute to saturate it.
 
-Correct, but it caps posting throughput at one document at a time regardless of
-which product or warehouse is involved. Fine at 25 users; it is the first thing
-to look at if the load test is slow.
-
-**Bites at:** 9.7, load test with 25 concurrent users.
-**Fix:** if measurement shows it matters — number journals per branch, or move
-numbering to the end of the transaction so the lock is held for less of it.
+Left here because the reasoning still holds — it is a global lock, and it is
+the first thing to look at if throughput ever matters — but it needs no work.
 
 ### 3. `number_sequences` unique key does not constrain branch-less rows
 
@@ -59,28 +54,7 @@ rows another way — a seeder, an admin screen — is not protected.
 that, or refuse branch-less sequences and give installation-wide documents a
 default branch.
 
-### 4. `StockPosting`'s deadlock retry stops working the moment a module wraps it
-
-`StockPosting::post()` passes `attempts: 3` to `DB::transaction()`. That retry
-only happens when the posting is the outermost transaction. Laravel refuses to
-retry a *nested* transaction on a deadlock — it rolls back to the savepoint and
-rethrows a `DeadlockException` immediately, because MySQL has already discarded
-the whole outer transaction (`ManagesTransactions::handleTransactionException`).
-
-Which means the retry is illusory in the case that will dominate: an Action like
-`PostGoodsReceipt` saving the document and posting stock inside one transaction,
-exactly as the architecture prescribes. Two concurrent receipts for the same
-product deadlock and one surfaces as an error to the user instead of retrying.
-
-Not wrong today — nothing wraps a posting yet — but it will be quietly wrong
-from the first module.
-
-**Bites at:** 3.2, the first Action that wraps a posting in its own transaction.
-**Fix:** retry at the Action boundary, where the transaction actually begins,
-and drop the misleading attempt count from `StockPosting`. Worth a concurrency
-test that wraps a posting the way a module will.
-
-### 5. Nothing physically stops a module skipping the posting claim
+### 4. Nothing physically stops a module skipping the posting claim
 
 `StockPosting::postDocument()` claims the document before posting; the
 single-movement `post()` underneath it does not, because `StockReversal` needs
@@ -96,7 +70,7 @@ method. Silent: the symptom is a document that posts twice.
 `StockReversal` is a bug. If it happens twice, move reversal onto its own entry
 point and make `post()` private.
 
-### 6. Where consigned-in stock physically sits is still undecided
+### 5. Where consigned-in stock physically sits is still undecided
 
 Schema §7 says inbound consignment works through `owner_id`, with the goods in
 "a real warehouse". Section 4 also defines a `consignment_in` warehouse type
@@ -117,7 +91,62 @@ valuation reports have to filter on.
 assertion to `StockPosting::validate()`. A settlement moving goods into our
 ownership while they sit still is the case that decides it.
 
-### 7. Kernel-posted journal entries carry no description
+### 6. The model generator misses pivot relations
+
+It derives relations from foreign keys, so a pivot table gives it two
+`hasMany`s and no `belongsToMany`. `Delivery::salesOrders()` was written by
+hand for that reason (F-41); `invoice_exchanges` ⇄ `sales_invoices` will need
+the same when M6 arrives.
+
+**Bites at:** 6.1, invoice exchange batches.
+**Fix:** write the relation by hand as each module needs it. The generator now
+skips existing files, so it will not remove them.
+
+### 7. The test suite needs 512 MB
+
+`phpunit.xml` raises `memory_limit` because two tests build the volumes the PRD
+names as acceptance criteria — 3,000 opening stock rows (F-02), and 5,000 SKUs
+with 2,000 outlets (F-31). Each peaks around 80 MB, and PHP's CLI default of
+128 MB will not hold one of them alongside the rest of the suite in one
+process.
+
+Not a leak: the one real retention bug behind this was `postDocument()` holding
+a result object per line, fixed in 1.9. But it does mean the suite will fail
+confusingly on a machine with a lower limit, and both tests are in the `slow`
+group if they need to be excluded.
+
+**Bites at:** CI, or anyone running the suite with a tighter `php.ini`.
+**Fix:** if it becomes awkward, run the `slow` group in its own process.
+
+### 8. `sortBy` with an array of closures silently does not sort
+
+`$collection->sortBy([fn ($x) => ..., fn ($x) => ...])` returns the original
+order. Only the property/direction form — `sortBy([['a', 'asc'], ['b', 'asc']])`
+— sorts on multiple keys. It fails silently, which is how it survived a passing
+test in the picking list until a third row made the order matter.
+
+Both callers now order in SQL instead, which is also where ordering belongs.
+
+**Bites at:** anywhere a multi-key sort looks right and is not.
+**Fix:** order in the query. If a collection sort is genuinely needed, use the
+pairs form and test it with enough rows to distinguish sorted from unsorted.
+
+### 9. Backups are manual, and offsite copying is a human step
+
+The screen takes a dump, downloads it, and proves it restores. It does not
+schedule anything and does not copy anything off the machine, because
+scheduling needs to know the server, the OS and where offsite is — PRD §10 Q14,
+unanswered.
+
+A backup that only exists on the server it backs up survives a bad upgrade and
+nothing else.
+
+**Bites at:** the first hardware failure at a client.
+**Fix:** once the server is known — cron or Task Scheduler, and rsync, S3 or a
+swapped disk. `DatabaseBackup::create()` is already the whole of the local
+half.
+
+### 10. Kernel-posted journal entries carry no description
 
 `StockPosting` posts entries with `ref_type` and `ref_id` set but `description`
 null, so a general ledger listing shows blank narration on every automatic line.

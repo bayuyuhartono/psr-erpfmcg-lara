@@ -9,8 +9,11 @@ Decided 2026-08-25. Laravel 13, PHP 8.4+, MySQL 9.7, Filament v5.
 > transaction, `StockReversal` undoes one by counter-entry, and `DocumentStates`
 > guards every status change, a document can only post once, and a closed
 > accounting period refuses backdated postings, and `stock:rebuild-balances`
-> proves the cache against the ledger. M1 to M4 are complete; M5 sales and
-> delivery is next.
+> proves the cache against the ledger. M1 to M7 are built, bar two items that
+> need a person: the F-31 stopwatch and the printed exchange receipt, which
+> waits on the client's printer. M1 to M9 are built. Three things need a person
+> rather than more code: the F-31 stopwatch, the dot matrix printer test, and
+> the server details that automatic offsite backups depend on.
 
 ---
 
@@ -63,6 +66,7 @@ app/
 
   Support/
     Posting/       StockPosting, JournalPoster, StockReversal, guards
+    Printing/      stored layouts, safe placeholder renderer
     Documents/     DocumentStates base, transition guards
     Import/        all-or-nothing spreadsheet import
     Uom/           base-unit conversion, line snapshots
@@ -126,6 +130,18 @@ Five rules, each traceable to a specific failure:
 2. **`SELECT … FOR UPDATE` on `product_costs`.** Moving average computed without
    a row lock is wrong the first time two receipts post concurrently, and it
    surfaces months later during an audit. This has a dedicated concurrency test.
+   Take the lock *first*: creating or touching the row before locking it means
+   a shared lock upgraded to an exclusive one, and two transactions each doing
+   that is a deadlock by construction. The row is created with the product so
+   the posting path never inserts it.
+   **Retrying a deadlock is the outermost transaction's job.** MySQL discards
+   the whole transaction, so a retry inside a nested one is impossible —
+   `DB::transaction` rethrows instead. Every Action that is an entry point
+   opens `PostingTransaction::run()`, which retries with jittered backoff
+   because two documents backing off in step collide again. Nested, it
+   deliberately does not retry: rolling back there would discard the caller's
+   work and re-run only a fragment of it. A retried closure re-runs against
+   stale in-memory models, so an Action refreshes its document at the top.
 3. **Append only.** Never UPDATE, never DELETE a ledger row. Reversals are new
    negative rows with a counter-journal. This is why `stock_ledger` has no
    `updated_at` or `deleted_at` — the columns would imply an edit path exists.
@@ -307,6 +323,18 @@ for quantities and unit costs, created through the `money()`, `qty()`, `cost()`,
 and `percent()` Blueprint macros in `SchemaServiceProvider`. Casts keep them out
 of PHP float arithmetic. Rounding happens once, at presentation.
 
+### Money that has not arrived yet
+
+Two accounts exist because a promise is not a payment. A postdated cheque sits
+in `1105 Postdated Cheques Receivable` until it clears, so the cash position
+never counts a drawer of paper — and a bounced one puts the debt back with the
+customer and reopens the invoice, which is why `paid` is not a final state.
+Money received beyond what is owed sits in `2104 Customer Advances`, because it
+is still the customer's until there is an invoice for it to answer.
+
+Both are the same idea as GR/IR on the buying side: the gap between the event
+and the money is a real thing, and it needs somewhere to live.
+
 ### Approvals that record a decision
 
 Where a rule can be overridden — a supplier invoice out of tolerance, a
@@ -332,6 +360,45 @@ The gate is the decision; it is not by itself containment. Anything that
 returns a record wholesale — an export, a JSON response — has to ask it too,
 and that is a review point for every new endpoint rather than something the
 model can enforce.
+
+### Print layout is a row, not a file
+
+The PRD calls print layout the most underestimated requirement and a week-one
+rejection risk, and requires layouts customisable per client without code
+changes. So a layout lives in `print_templates` and is edited on a screen.
+Forking a template directory per installation is how one product becomes
+fifteen products.
+
+The syntax is deliberately **not Blade**. These templates are edited by
+whoever installs the system at a client, and a Blade template loaded from the
+database is arbitrary PHP execution by anyone who can reach that screen. What
+is supported is what a layout needs: values, chained formatters, and one
+repeating block.
+
+Fixed-width padding is the part that matters for continuous form — a column
+that drifts by one character puts the whole run out of alignment with
+pre-printed stationery, and there is a test asserting columns hold position and
+no line runs past the paper. None of which is worth anything until paper comes
+out of the client's actual machine (8.5).
+
+### The software is sold, not rented
+
+It has no expiry. A distributor's stock, receivables and journals live on their
+own server, and an installation that switched itself off over a renewal would
+be holding a business hostage — which is a reason to be sued and never
+referred, not a commercial lever.
+
+`licenses.supported_until` is deliberately not called `expires_on`: the obvious
+thing to do with a column of that name is block on it, and the next person to
+see it would have been right to. It marks when updates and support end, and is
+reported and nothing else.
+
+Two things are enforced, and neither can stop work already under way. **Seats**
+are checked where a seat is taken — activating a user — never at login, so
+nobody is locked out mid-day. **Modules** hide what was not bought, which is a
+different thing from switching off something that was. A missing licence row
+means unrestricted, because a client whose record was lost in a restore still
+has a business to run.
 
 ### Per-client variation is data, not code
 

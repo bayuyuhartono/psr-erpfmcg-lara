@@ -28,6 +28,7 @@ use Brick\Math\BigDecimal;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\DB;
 
 final class Product extends DomainModel
 {
@@ -45,6 +46,23 @@ final class Product extends DomainModel
     protected static function booted(): void
     {
         parent::booted();
+
+        // Every product has a cost row from the moment it exists.
+        //
+        // Creating it lazily on the first movement meant two postings could
+        // race to insert it, and `INSERT IGNORE` racing on the same gap
+        // deadlocks. Making it part of the product removes the insert from the
+        // posting path entirely: locking a cost row is then one statement,
+        // always.
+        self::created(function (self $product): void {
+            DB::table('product_costs')->insertOrIgnore([
+                'product_id' => $product->getKey(),
+                'average_cost' => '0.0000',
+                'total_qty' => '0.0000',
+                'total_value' => '0.00',
+                'updated_at' => now(),
+            ]);
+        });
 
         // A product whose batch and expiry flags disagree with its thresholds
         // passes every shelf-life check silently, which is the worst possible

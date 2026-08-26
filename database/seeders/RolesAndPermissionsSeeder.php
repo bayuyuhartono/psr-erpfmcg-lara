@@ -18,7 +18,7 @@ final class RolesAndPermissionsSeeder extends Seeder
             // commits up to 50 million, anything larger goes to the manager.
             'Purchasing' => ['purchase_order.create' => null, 'purchase_order.approve' => '50000000.00'],
             'Purchasing Manager' => ['purchase_order.create' => null, 'purchase_order.approve' => null],
-            'Sales Supervisor' => ['sales_order.approve' => null, 'discount.approve' => '20.00', 'product.view_cost' => null],
+            'Sales Supervisor' => ['sales_order.approve' => null, 'sales_order.release_hold' => null, 'discount.approve' => '20.00', 'product.view_cost' => null],
             'Sales Admin' => ['sales_order.create' => null, 'sales_order.view' => null, 'discount.approve' => '5.00'],
         ];
 

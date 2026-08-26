@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Domain\Inventory\Models\ProductCost;
+use App\Domain\Inventory\Models\Warehouse;
+use App\Domain\Masters\Models\Product;
 use App\Support\Posting\Exceptions\AlreadyPosted;
 use App\Support\Posting\StockMovement;
 use App\Support\Posting\StockPosting;
@@ -96,12 +98,14 @@ final class MySqlStockPostingConcurrencyTest extends TestCase
     /** @return array{string, string} warehouse ID, product ID */
     private function stockContext(): array
     {
-        $warehouseId = (string) Str::uuid7();
-        $productId = (string) Str::uuid7();
-        DB::table('warehouses')->insert(['id' => $warehouseId, 'code' => 'CON-'.Str::lower(Str::random(8)), 'name' => 'Concurrency Test', 'warehouse_type' => 'normal', 'active' => true]);
-        DB::table('products')->insert(['id' => $productId, 'sku' => 'CON-'.Str::lower(Str::random(8)), 'name' => 'Concurrency Test', 'base_uom' => 'PCS', 'track_batch' => false, 'track_expiry' => false, 'issue_method' => 'fefo', 'active' => true]);
-
-        return [$warehouseId, $productId];
+        // Through the models, because that is how products are created
+        // everywhere in the application — and it is the model that gives a
+        // product its `product_costs` row, which keeps the first movement of
+        // its life off the insert path two processes can deadlock on.
+        return [
+            Warehouse::factory()->create(['code' => 'CON-'.Str::lower(Str::random(8))])->id,
+            Product::factory()->create(['sku' => 'CON-'.Str::lower(Str::random(8)), 'base_uom' => 'PCS'])->id,
+        ];
     }
 
     /**

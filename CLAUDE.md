@@ -33,6 +33,7 @@ password. `mysql -h127.0.0.1 -uroot psr_erpfmcg` connects.
 | [docs/architecture.md](docs/architecture.md) | How the code is organised, and why |
 | [docs/implementation-plan.md](docs/implementation-plan.md) | Task list with per-item status. Keep it current |
 | [docs/known-issues.md](docs/known-issues.md) | Deliberately unfixed problems, and when each starts to bite |
+| [docs/runbook.md](docs/runbook.md) | Installing, updating and operating a client's installation |
 
 **The migrations are authoritative where they disagree with the schema doc.**
 The doc still says PostgreSQL and still offers FIFO. Deviations are commented
@@ -47,6 +48,8 @@ doc without reading that comment first.
 - **Moving average costing only.** `costing_method` was deliberately omitted
   rather than shipped accepting one value
 - **Filament v5** for the whole UI
+- **Sold, not rented.** No expiry, ever. The licence limits seats and modules;
+  it never stops the software running
 - **Modular monolith + Action classes**, one posting kernel, no repositories
 
 ## Rules that must not be broken

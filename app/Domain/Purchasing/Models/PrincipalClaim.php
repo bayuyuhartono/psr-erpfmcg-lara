@@ -25,6 +25,7 @@ final class PrincipalClaim extends DomainModel
     protected function casts(): array
     {
         return [
+            'claim_date' => 'immutable_date',
             'total_amount' => DecimalCast::class.':2',
             'approved_amount' => DecimalCast::class.':2',
         ];

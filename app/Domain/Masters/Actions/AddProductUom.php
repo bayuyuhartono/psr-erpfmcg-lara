@@ -4,10 +4,10 @@ namespace App\Domain\Masters\Actions;
 
 use App\Domain\Masters\Models\Product;
 use App\Domain\Masters\Models\ProductUom;
+use App\Support\Posting\PostingTransaction;
 use App\Support\Uom\Exceptions\InvalidConversion;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Declares one of a product's selling or buying units — 1 CARTON = 144 PCS.
@@ -41,7 +41,7 @@ final class AddProductUom
             ));
         }
 
-        return DB::transaction(function () use ($product, $uom, $factor, $barcode, $defaultForPurchase, $defaultForSale): ProductUom {
+        return PostingTransaction::run(function () use ($product, $uom, $factor, $barcode, $defaultForPurchase, $defaultForSale): ProductUom {
             // One default each way, or order entry has to guess which unit the
             // user meant.
             if ($defaultForPurchase) {

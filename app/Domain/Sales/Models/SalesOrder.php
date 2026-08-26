@@ -8,19 +8,31 @@ use App\Domain\Masters\Models\BusinessPartner;
 use App\Domain\Masters\Models\PartnerAddress;
 use App\Domain\Masters\Models\PriceList;
 use App\Domain\Masters\Models\Salesperson;
+use App\Domain\Sales\States\SalesOrderStates;
 use App\Domain\Shared\Models\DomainModel;
 use App\Models\User;
+use App\Support\Documents\DocumentStates;
+use App\Support\Documents\HasDocumentState;
 use App\Support\Money\DecimalCast;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class SalesOrder extends DomainModel
 {
+    use HasDocumentState;
+
     protected $table = 'sales_orders';
+
+    public static function states(): DocumentStates
+    {
+        return new SalesOrderStates;
+    }
 
     protected function casts(): array
     {
         return [
+            'order_date' => 'immutable_date',
+            'requested_date' => 'immutable_date',
             'subtotal' => DecimalCast::class.':2',
             'discount_amount' => DecimalCast::class.':2',
             'vat_amount' => DecimalCast::class.':2',

@@ -7,9 +7,9 @@ use App\Domain\Inventory\Models\StockLedger;
 use App\Domain\Inventory\Models\StockTransfer;
 use App\Domain\Inventory\Models\StockTransferLine;
 use App\Models\User;
+use App\Support\Posting\PostingTransaction;
 use App\Support\Posting\StockMovement;
 use App\Support\Posting\StockPosting;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Puts the goods into the receiving warehouse, at the cost they left at.
@@ -36,7 +36,11 @@ final class ReceiveStockTransfer
             throw new InvalidStockTransfer(sprintf('Transfer %s has not been shipped yet.', $transfer->document_number));
         }
 
-        return DB::transaction(function () use ($transfer, $lines, $shippedCosts, $actor): StockTransfer {
+        return PostingTransaction::run(function () use ($transfer, $lines, $shippedCosts, $actor): StockTransfer {
+            // A deadlock retry re-runs this closure, and $transfer still
+            // carries whatever the rolled-back attempt put on it.
+            $transfer->refresh();
+
             $transfer->transitionTo('received', $actor);
 
             $this->posting->postDocument($lines->map(fn (StockTransferLine $line): StockMovement => new StockMovement(

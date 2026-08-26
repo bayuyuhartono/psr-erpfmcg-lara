@@ -9,7 +9,7 @@ use App\Domain\Inventory\Models\StockCount;
 use App\Domain\Inventory\Models\StockCountLine;
 use App\Models\User;
 use App\Support\Posting\DocumentNumberer;
-use Illuminate\Support\Facades\DB;
+use App\Support\Posting\PostingTransaction;
 
 /**
  * Turns a finished count into an adjustment waiting for approval (F-22).
@@ -33,7 +33,9 @@ final class CloseStockCount
             ));
         }
 
-        return DB::transaction(function () use ($count, $lines, $actor): ?StockAdjustment {
+        return PostingTransaction::run(function () use ($count, $lines, $actor): ?StockAdjustment {
+            $count->refresh();
+
             $count->transitionTo('reviewed', $actor);
 
             $variances = $lines->filter(fn (StockCountLine $line): bool => ! $line->variance->isZero());

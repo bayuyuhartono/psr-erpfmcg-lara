@@ -8,9 +8,9 @@ use App\Domain\Inventory\Models\StockCountLine;
 use App\Domain\Inventory\Models\Warehouse;
 use App\Domain\Masters\Models\Category;
 use App\Support\Posting\DocumentNumberer;
+use App\Support\Posting\PostingTransaction;
 use Carbon\CarbonImmutable;
 use DateTimeInterface;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Opens a count and freezes what the system thinks is there (F-22).
@@ -32,7 +32,7 @@ final class OpenStockCount
     ): StockCount {
         $countDate = CarbonImmutable::instance($countDate ?? CarbonImmutable::now())->startOfDay();
 
-        return DB::transaction(function () use ($warehouse, $category, $countDate, $countType): StockCount {
+        return PostingTransaction::run(function () use ($warehouse, $category, $countDate, $countType): StockCount {
             $count = StockCount::create([
                 'document_number' => $this->numberer->next('SC', $countDate),
                 'warehouse_id' => $warehouse->getKey(),

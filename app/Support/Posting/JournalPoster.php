@@ -4,11 +4,13 @@ namespace App\Support\Posting;
 
 use App\Domain\Accounting\Models\JournalEntry;
 use App\Domain\Accounting\Models\JournalMapping;
+use App\Models\User;
 use App\Support\Posting\Exceptions\UnbalancedJournal;
 use App\Support\Posting\Exceptions\UnmappedAccount;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
 use Carbon\CarbonImmutable;
+use DateTimeInterface;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -58,6 +60,79 @@ final class JournalPoster
                     'description' => $posting->description,
                     'created_by' => $document->actorId,
                 ]);
+            }
+
+            return $entry->load('journalLines');
+        });
+    }
+
+    /**
+     * A manual journal, naming accounts directly (F-60).
+     *
+     * Everything automatic goes through `post()` and resolves accounts from
+     * `journal_mappings`, because a document type should not know account
+     * codes. A manual adjustment is the opposite case: a person has decided
+     * which accounts, and there is no document type to map from.
+     *
+     * It still comes through here rather than writing `journal_entries`
+     * itself, so the balance check and the period lock apply to it too.
+     *
+     * @param  list<array{account_id: string, debit?: string, credit?: string, partner_id?: string, branch_id?: string, description?: string}>  $lines
+     */
+    public function postManual(
+        string $description,
+        DateTimeInterface $entryDate,
+        array $lines,
+        ?string $actorId = null,
+        string $status = 'posted',
+    ): JournalEntry {
+        $this->periods->assertOpen($entryDate, 'This manual journal');
+
+        $debits = BigDecimal::zero();
+        $credits = BigDecimal::zero();
+
+        foreach ($lines as $line) {
+            $debits = $debits->plus($this->money(BigDecimal::of($line['debit'] ?? 0)));
+            $credits = $credits->plus($this->money(BigDecimal::of($line['credit'] ?? 0)));
+        }
+
+        if ($lines === [] || (! $debits->isEqualTo($credits))) {
+            throw new UnbalancedJournal(sprintf(
+                'Manual journal does not balance: debits %s, credits %s.',
+                $debits,
+                $credits,
+            ));
+        }
+
+        if ($debits->isZero()) {
+            throw new UnbalancedJournal('A manual journal of nothing is not an adjustment.');
+        }
+
+        return DB::transaction(function () use ($description, $entryDate, $lines, $actorId, $status): JournalEntry {
+            $entry = JournalEntry::create([
+                'document_number' => $this->numberer->next('JE', CarbonImmutable::instance($entryDate)),
+                'entry_date' => $entryDate->format('Y-m-d'),
+                'description' => $description,
+                'ref_type' => 'manual',
+                'ref_id' => null,
+                'status' => 'draft',
+                'created_by' => $actorId,
+            ]);
+
+            foreach ($lines as $line) {
+                $entry->journalLines()->create([
+                    'account_id' => $line['account_id'],
+                    'partner_id' => $line['partner_id'] ?? null,
+                    'branch_id' => $line['branch_id'] ?? null,
+                    'debit' => $this->money(BigDecimal::of($line['debit'] ?? 0)),
+                    'credit' => $this->money(BigDecimal::of($line['credit'] ?? 0)),
+                    'description' => $line['description'] ?? null,
+                    'created_by' => $actorId,
+                ]);
+            }
+
+            if ($status === 'posted') {
+                $entry->transitionTo('posted', $actorId === null ? null : User::find($actorId));
             }
 
             return $entry->load('journalLines');

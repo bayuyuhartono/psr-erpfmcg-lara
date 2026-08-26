@@ -8,10 +8,10 @@ use App\Domain\Purchasing\Models\GoodsReceiptLine;
 use App\Domain\Purchasing\Models\PurchaseOrder;
 use App\Domain\Purchasing\Models\PurchaseOrderLine;
 use App\Models\User;
+use App\Support\Posting\PostingTransaction;
 use App\Support\Posting\StockMovement;
 use App\Support\Posting\StockPosting;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Turns a checked receipt into stock.
@@ -38,7 +38,11 @@ final class PostGoodsReceipt
             ));
         }
 
-        return DB::transaction(function () use ($receipt, $accepted, $actor): GoodsReceipt {
+        return PostingTransaction::run(function () use ($receipt, $accepted, $actor): GoodsReceipt {
+            // A deadlock retry re-runs this closure, and $receipt still
+            // carries whatever the rolled-back attempt put on it.
+            $receipt->refresh();
+
             // The state machine first, the posting claim underneath it. The
             // transition is the readable guard for the ordinary second click;
             // the claim is the one that holds when two requests are in flight

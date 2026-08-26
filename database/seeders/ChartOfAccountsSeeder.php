@@ -16,6 +16,9 @@ final class ChartOfAccountsSeeder extends Seeder
             ['1103', 'Inventory', 'asset', false],
             // PPN masukan: VAT we paid the supplier and reclaim.
             ['1104', 'VAT Input', 'asset', false],
+            // A postdated cheque is a promise, not money. It sits here until it
+            // clears, so the cash position never counts it (F-51).
+            ['1105', 'Postdated Cheques Receivable', 'asset', false],
             ['2101', 'Trade Payables', 'liability', false],
             ['2102', 'VAT Payable', 'liability', false],
             // Goods received but not yet invoiced. The receipt credits this and
@@ -23,6 +26,9 @@ final class ChartOfAccountsSeeder extends Seeder
             // for the same goods — and the balance here is what the three-way
             // match reconciles against (F-11).
             ['2103', 'Goods Received Not Invoiced', 'liability', false],
+            // Money received beyond what was owed. We hold it until the next
+            // invoice, so it is a liability and not revenue (F-52).
+            ['2104', 'Customer Advances', 'liability', false],
             ['3101', 'Retained Earnings', 'equity', false],
             // Balances the opening stock import. Without it the whole opening
             // inventory lands in an expense variance in month one.

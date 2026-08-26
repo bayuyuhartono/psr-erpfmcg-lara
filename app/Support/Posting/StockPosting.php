@@ -70,6 +70,12 @@ final class StockPosting
         });
     }
 
+    /**
+     * The single-movement primitive. Deliberately no retry: this almost always
+     * runs inside a caller's transaction, where MySQL has already discarded
+     * the work and a retry here is impossible. Retrying is
+     * `PostingTransaction`'s job, at the outermost boundary.
+     */
     public function post(StockMovement $movement): StockPostingResult
     {
         $this->validate($movement);
@@ -107,7 +113,7 @@ final class StockPosting
             $journal = $this->writeJournal($movement, $value);
 
             return new StockPostingResult($ledger, $balance, $cost, $journal);
-        }, 3);
+        });
     }
 
     private function validate(StockMovement $movement): void
@@ -133,8 +139,30 @@ final class StockPosting
         }
     }
 
+    /**
+     * Takes the exclusive lock the moving average is computed under.
+     *
+     * Locking first and inserting only if the row is missing, rather than the
+     * other way round. `insertOrIgnore` on an existing row takes a shared lock,
+     * and the `SELECT … FOR UPDATE` that follows has to upgrade it — and two
+     * transactions each holding a shared lock and each waiting to upgrade is a
+     * deadlock by construction. It cost most of the work under twenty-five
+     * concurrent users receiving the same product.
+     *
+     * After the first movement of a product's life the row exists, so this is
+     * one statement and no upgrade.
+     */
     private function lockProductCost(string $productId): ProductCost
     {
+        $cost = ProductCost::query()->where('product_id', $productId)->lockForUpdate()->first();
+
+        if ($cost !== null) {
+            return $cost;
+        }
+
+        // Only for products created without going through the model — a bulk
+        // import writing rows directly. Ordinary products already have their
+        // cost row, so this path is not the one under contention.
         DB::table('product_costs')->insertOrIgnore([
             'product_id' => $productId,
             'average_cost' => '0.0000',

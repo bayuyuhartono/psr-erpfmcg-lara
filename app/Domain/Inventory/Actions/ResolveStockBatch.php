@@ -4,11 +4,11 @@ namespace App\Domain\Inventory\Actions;
 
 use App\Domain\Inventory\Models\StockBatch;
 use App\Domain\Masters\Models\Product;
+use App\Support\Posting\PostingTransaction;
 use App\Support\ShelfLife\Exceptions\InvalidBatchData;
 use App\Support\ShelfLife\ShelfLifePolicy;
 use Carbon\CarbonImmutable;
 use DateTimeInterface;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Finds or creates the batch a receipt is landing into, filling in the expiry
@@ -56,7 +56,7 @@ final class ResolveStockBatch
 
         $this->shelfLife->assertAcceptableOnReceipt($product, $expiry, $receivedOn);
 
-        return DB::transaction(function () use ($product, $batchNumber, $productionDate, $expiry): StockBatch {
+        return PostingTransaction::run(function () use ($product, $batchNumber, $productionDate, $expiry): StockBatch {
             $batch = StockBatch::where('product_id', $product->getKey())
                 ->where('batch_number', $batchNumber)
                 ->lockForUpdate()

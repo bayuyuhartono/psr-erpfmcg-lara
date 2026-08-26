@@ -10,8 +10,8 @@ use App\Support\Posting\JournalDocument;
 use App\Support\Posting\JournalPoster;
 use App\Support\Posting\JournalPosting;
 use App\Support\Posting\PostingGuard;
+use App\Support\Posting\PostingTransaction;
 use Brick\Math\BigDecimal;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Posts a supplier invoice, clearing what the goods receipt parked in GR/IR
@@ -41,7 +41,11 @@ final class PostSupplierInvoice
             $this->assertApproved($invoice, $actor, $approveVariance, $match->difference(), $match->describe(), $match->tolerance);
         }
 
-        return DB::transaction(function () use ($invoice, $actor): SupplierInvoice {
+        return PostingTransaction::run(function () use ($invoice, $actor): SupplierInvoice {
+            // A deadlock retry re-runs this closure, and $invoice still
+            // carries whatever the rolled-back attempt put on it.
+            $invoice->refresh();
+
             // State machine first, claim underneath — the same order as a goods
             // receipt, so a second click reads as "already posted" in terms of
             // the document rather than the posting reference.

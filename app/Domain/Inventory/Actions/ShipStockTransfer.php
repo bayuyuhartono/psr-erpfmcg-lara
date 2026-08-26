@@ -6,9 +6,9 @@ use App\Domain\Inventory\Exceptions\InvalidStockTransfer;
 use App\Domain\Inventory\Models\StockTransfer;
 use App\Domain\Inventory\Models\StockTransferLine;
 use App\Models\User;
+use App\Support\Posting\PostingTransaction;
 use App\Support\Posting\StockMovement;
 use App\Support\Posting\StockPosting;
-use Illuminate\Support\Facades\DB;
 
 /** Takes the goods out of the sending warehouse. */
 final class ShipStockTransfer
@@ -27,7 +27,11 @@ final class ShipStockTransfer
             throw new InvalidStockTransfer(sprintf('Transfer %s has no lines.', $transfer->document_number));
         }
 
-        return DB::transaction(function () use ($transfer, $lines, $actor): StockTransfer {
+        return PostingTransaction::run(function () use ($transfer, $lines, $actor): StockTransfer {
+            // A deadlock retry re-runs this closure, and $transfer still
+            // carries whatever the rolled-back attempt put on it.
+            $transfer->refresh();
+
             $transfer->transitionTo('shipped', $actor);
 
             $this->posting->postDocument($lines->map(fn (StockTransferLine $line): StockMovement => new StockMovement(

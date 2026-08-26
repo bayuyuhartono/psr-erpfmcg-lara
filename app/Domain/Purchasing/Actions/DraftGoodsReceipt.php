@@ -11,12 +11,12 @@ use App\Domain\Purchasing\Models\GoodsReceiptLine;
 use App\Domain\Purchasing\Models\PurchaseOrder;
 use App\Domain\Purchasing\Models\PurchaseOrderLine;
 use App\Support\Posting\DocumentNumberer;
+use App\Support\Posting\PostingTransaction;
 use App\Support\Uom\UomConverter;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
 use Carbon\CarbonImmutable;
 use DateTimeInterface;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Records what arrived, before any of it becomes stock (F-10).
@@ -74,7 +74,7 @@ final class DraftGoodsReceipt
 
         $receiptDate = CarbonImmutable::instance($receiptDate ?? CarbonImmutable::now())->startOfDay();
 
-        return DB::transaction(function () use ($supplier, $warehouseId, $lines, $order, $receiptDate, $supplierDoNumber, $owner): GoodsReceipt {
+        return PostingTransaction::run(function () use ($supplier, $warehouseId, $lines, $order, $receiptDate, $supplierDoNumber, $owner): GoodsReceipt {
             $receipt = GoodsReceipt::create([
                 'document_number' => $this->numberer->next('GR', $receiptDate),
                 'purchase_order_id' => $order?->getKey(),

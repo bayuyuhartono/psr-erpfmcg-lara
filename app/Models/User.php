@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Domain\Masters\Exceptions\SeatsExhausted;
 use App\Domain\Masters\Models\Branch;
 use App\Domain\Masters\Models\Role;
+use App\Domain\Masters\Services\Licence;
 use App\Support\Audit\AuditObserver;
 use Brick\Math\BigDecimal;
 use Database\Factories\UserFactory;
@@ -77,6 +79,27 @@ class User extends Authenticatable implements FilamentUser
     protected static function booted(): void
     {
         static::observe(AuditObserver::class);
+
+        // Seats are checked where a seat is actually taken, never at login.
+        // Someone who is already working keeps working; what is refused is
+        // activating one more person than the client bought (9.6).
+        static::saving(function (self $user): void {
+            $beingActivated = $user->active && ($user->isDirty('active') || ! $user->exists);
+
+            if (! $beingActivated) {
+                return;
+            }
+
+            $licence = app(Licence::class);
+
+            if (! $licence->hasSeatFor($user)) {
+                throw new SeatsExhausted(sprintf(
+                    'This installation was licensed for %d user(s) and %d are active. Deactivate someone, or buy more seats.',
+                    $licence->seats(),
+                    $licence->seatsUsed(),
+                ));
+            }
+        });
     }
 
     /**

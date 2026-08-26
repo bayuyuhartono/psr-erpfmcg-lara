@@ -91,9 +91,9 @@ final class FoundationTest extends TestCase
 
         $this->assertDatabaseCount('company_settings', 1);
         $this->assertDatabaseCount('roles', 7);
-        $this->assertDatabaseCount('chart_of_accounts', 12);
-        $this->assertDatabaseCount('journal_mappings', 22);
-        $this->assertDatabaseCount('number_sequences', 8);
+        $this->assertDatabaseCount('chart_of_accounts', 14);
+        $this->assertDatabaseCount('journal_mappings', 31);
+        $this->assertDatabaseCount('number_sequences', 15);
     }
 
     public function test_role_permission_thresholds_are_enforced(): void

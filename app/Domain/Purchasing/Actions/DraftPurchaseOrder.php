@@ -9,12 +9,12 @@ use App\Domain\Purchasing\Exceptions\InvalidPurchaseOrder;
 use App\Domain\Purchasing\Models\PurchaseOrder;
 use App\Domain\Purchasing\Models\PurchaseOrderLine;
 use App\Support\Posting\DocumentNumberer;
+use App\Support\Posting\PostingTransaction;
 use App\Support\Uom\UomConverter;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
 use Carbon\CarbonImmutable;
 use DateTimeInterface;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Raises a purchase order in draft.
@@ -52,7 +52,7 @@ final class DraftPurchaseOrder
 
         $orderDate = CarbonImmutable::instance($orderDate ?? CarbonImmutable::now())->startOfDay();
 
-        return DB::transaction(function () use ($supplier, $warehouseId, $lines, $orderDate, $expectedDate, $note, $branchId): PurchaseOrder {
+        return PostingTransaction::run(function () use ($supplier, $warehouseId, $lines, $orderDate, $expectedDate, $note, $branchId): PurchaseOrder {
             $order = PurchaseOrder::create([
                 'document_number' => $this->numberer->next('PO', $orderDate),
                 'branch_id' => $branchId,

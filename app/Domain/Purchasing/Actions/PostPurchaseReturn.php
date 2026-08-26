@@ -6,9 +6,9 @@ use App\Domain\Purchasing\Exceptions\InvalidPurchaseReturn;
 use App\Domain\Purchasing\Models\PurchaseReturn;
 use App\Domain\Purchasing\Models\PurchaseReturnLine;
 use App\Models\User;
+use App\Support\Posting\PostingTransaction;
 use App\Support\Posting\StockMovement;
 use App\Support\Posting\StockPosting;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Sends goods back to the supplier and reduces what we owe them.
@@ -33,7 +33,11 @@ final class PostPurchaseReturn
             throw new InvalidPurchaseReturn(sprintf('Purchase return %s has no lines.', $return->document_number));
         }
 
-        return DB::transaction(function () use ($return, $lines, $actor): PurchaseReturn {
+        return PostingTransaction::run(function () use ($return, $lines, $actor): PurchaseReturn {
+            // A deadlock retry re-runs this closure, and $return still
+            // carries whatever the rolled-back attempt put on it.
+            $return->refresh();
+
             $return->transitionTo('posted', $actor);
 
             $this->posting->postDocument($lines->map(fn (PurchaseReturnLine $line): StockMovement => new StockMovement(

@@ -6,18 +6,30 @@ use App\Domain\Consignment\Models\ConsignmentSettlement;
 use App\Domain\Finance\Models\InvoiceExchangeLine;
 use App\Domain\Finance\Models\PaymentAllocation;
 use App\Domain\Masters\Models\BusinessPartner;
+use App\Domain\Sales\States\SalesInvoiceStates;
 use App\Domain\Shared\Models\DomainModel;
+use App\Support\Documents\DocumentStates;
+use App\Support\Documents\HasDocumentState;
 use App\Support\Money\DecimalCast;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 final class SalesInvoice extends DomainModel
 {
+    use HasDocumentState;
+
     protected $table = 'sales_invoices';
+
+    public static function states(): DocumentStates
+    {
+        return new SalesInvoiceStates;
+    }
 
     protected function casts(): array
     {
         return [
+            'invoice_date' => 'immutable_date',
+            'due_date' => 'immutable_date',
             'subtotal' => DecimalCast::class.':2',
             'discount_amount' => DecimalCast::class.':2',
             'vat_amount' => DecimalCast::class.':2',
