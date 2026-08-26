@@ -46,6 +46,17 @@ final class PackageUpdate extends Command
             return self::FAILURE;
         }
 
+        // The built front end is generated, so it is not in git — and a client
+        // with no internet cannot run npm. A package without it installs a
+        // panel with no styling at all.
+        if (! is_file(public_path('build/manifest.json')) || ! is_dir(public_path('css/filament'))) {
+            $this->error('The front end is not built. Run these first, or the client gets an unstyled panel:');
+            $this->line('    php artisan filament:assets');
+            $this->line('    npm ci && npm run build');
+
+            return self::FAILURE;
+        }
+
         $zip = new ZipArchive;
 
         if ($zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
@@ -95,9 +106,12 @@ final class PackageUpdate extends Command
             yield $full;
         }
 
-        // Vendor is not in git and is the whole reason the package exists.
-        foreach ($this->walk(base_path('vendor')) as $file) {
-            yield $file;
+        // None of these are in git, and all of them are needed on a machine
+        // that cannot run composer or npm.
+        foreach (['vendor', 'public/build', 'public/css', 'public/js', 'public/fonts'] as $generated) {
+            foreach ($this->walk(base_path($generated)) as $file) {
+                yield $file;
+            }
         }
     }
 
@@ -135,8 +149,9 @@ final class PackageUpdate extends Command
             'Migrations:       '.$installed['applied'],
             'Built from commit:'.($installed['commit'] ?? 'unknown'),
             '',
-            'Contains the application and its vendor directory. Does not contain',
-            '.env, storage/ or any database — those belong to the installation.',
+            'Contains the application, its vendor directory and the built front',
+            'end. Does not contain .env, storage/ or any database — those belong',
+            'to the installation.',
         ])."\n";
     }
 

@@ -146,7 +146,23 @@ nothing else.
 swapped disk. `DatabaseBackup::create()` is already the whole of the local
 half.
 
-### 10. Kernel-posted journal entries carry no description
+### 10. Filament's stylesheet only knows Filament's own classes
+
+Filament imports Tailwind with `source(none)` and ships a precompiled
+stylesheet. Any Tailwind class used in a custom page or view — order entry,
+imports, backups — is absent from it unless the panel has a theme whose
+`@source` lines point Tailwind at this application's markup.
+
+That theme now exists and is registered. The trap is that adding a *new* custom
+page under a path those `@source` globs do not cover would silently render
+unstyled, with nothing failing.
+
+**Bites at:** any new custom Filament page outside `app/Filament` or
+`resources/views/filament`.
+**Fix:** keep custom pages under those two paths, or add another `@source`
+line. `npm run build` after either.
+
+### 11. Kernel-posted journal entries carry no description
 
 `StockPosting` posts entries with `ref_type` and `ref_id` set but `description`
 null, so a general ledger listing shows blank narration on every automatic line.

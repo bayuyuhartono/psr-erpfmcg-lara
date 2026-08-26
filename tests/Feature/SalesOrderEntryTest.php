@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Domain\Inventory\Models\Warehouse;
+use App\Domain\Masters\Actions\AddProductUom;
 use App\Domain\Masters\Models\BusinessPartner;
 use App\Domain\Masters\Models\CustomerTier;
 use App\Domain\Masters\Models\PriceList;
@@ -141,7 +142,73 @@ final class SalesOrderEntryTest extends TestCase
     {
         Livewire::test(SalesOrderEntry::class)
             ->set('customerId', $this->customer->id)
-            ->assertSee('available');
+            ->assertSee('Credit limit')
+            ->assertSee('Already owes')
+            ->assertSee('Left after this');
+    }
+
+    public function test_the_credit_panel_warns_before_the_order_is_saved(): void
+    {
+        // F-30 information at the moment it is useful. An admin who only finds
+        // out after saving has already spent the two minutes.
+        $this->customer->update(['credit_limit' => '1000']);
+        $this->product('KOPI-01', 'Kopi Susu', '5000');
+
+        Livewire::test(SalesOrderEntry::class)
+            ->set('customerId', $this->customer->id)
+            ->set('search', 'KOPI-01')
+            ->call('addLine')
+            ->assertSee('this will be held for release');
+    }
+
+    public function test_the_unit_can_be_chosen_rather_than_assumed(): void
+    {
+        // Five cartons and five pieces differ by the carton size, and an
+        // order that cannot say which is an order waiting to be wrong.
+        $product = $this->product('KOPI-01', 'Kopi Susu', '5000');
+        app(AddProductUom::class)($product, 'DUS', '24', defaultForSale: true);
+        PriceListItem::create([
+            'price_list_id' => $this->priceList->id, 'product_id' => $product->id,
+            'uom' => 'DUS', 'min_qty' => '0', 'unit_price' => '120000',
+        ]);
+
+        $page = Livewire::test(SalesOrderEntry::class)
+            ->set('customerId', $this->customer->id)
+            ->set('search', 'KOPI-01');
+
+        // Both units offered, with the conversion spelled out.
+        $page->call('choose', $product->id);
+        $units = $page->instance()->unitOptions();
+
+        $this->assertSame(['PCS', 'DUS'], array_keys($units));
+        $this->assertSame('DUS (24 PCS)', $units['DUS']);
+
+        $page->set('selectedUom', 'PCS')
+            ->set('quantity', '5')
+            ->call('addLine')
+            ->assertSet('lines.0.uom', 'PCS')
+            ->assertSet('lines.0.line_total', '25000.00');
+    }
+
+    public function test_changing_a_line_quantity_reprices_it(): void
+    {
+        $product = $this->product('KOPI-01', 'Kopi Susu', '5000');
+        // A volume band: ten or more is cheaper.
+        PriceListItem::create([
+            'price_list_id' => $this->priceList->id, 'product_id' => $product->id,
+            'uom' => 'PCS', 'min_qty' => '10', 'unit_price' => '4500',
+        ]);
+
+        Livewire::test(SalesOrderEntry::class)
+            ->set('customerId', $this->customer->id)
+            ->set('search', 'KOPI-01')
+            ->set('quantity', '5')
+            ->call('addLine')
+            ->assertSet('lines.0.line_total', '25000.00')
+            // Re-quoted, not multiplied: the band turns on quantity.
+            ->set('lines.0.qty', '20')
+            ->assertSet('lines.0.unit_price', '4500.00')
+            ->assertSet('lines.0.line_total', '90000.00');
     }
 
     public function test_saving_goes_through_the_same_actions_as_everything_else(): void

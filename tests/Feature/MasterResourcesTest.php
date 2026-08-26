@@ -24,6 +24,8 @@ use Database\Seeders\JournalMappingsSeeder;
 use Database\Seeders\NumberSequencesSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use DateTimeImmutable;
+use Filament\Facades\Filament;
+use Filament\Schemas\Schema;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -48,6 +50,33 @@ final class MasterResourcesTest extends TestCase
         $user->roles()->attach(DB::table('roles')->where('name', $role)->value('id'));
 
         return $user;
+    }
+
+    /**
+     * Every resource, not a hand-kept list of three. A generated resource ships
+     * with `components([])` and renders a blank form under a real heading, so
+     * it looks finished and passes any test that only asks for a 200 — this
+     * asks each create screen for a field as well.
+     */
+    public function test_every_create_screen_renders_its_fields(): void
+    {
+        $resources = array_filter(
+            Filament::getPanel('admin')->getResources(),
+            fn (string $resource): bool => array_key_exists('create', $resource::getPages()),
+        );
+
+        $this->assertNotEmpty($resources);
+
+        foreach ($resources as $resource) {
+            $this->get($resource::getUrl('create'))->assertSuccessful();
+
+            $fields = $resource::form(Schema::make(new ListProducts))->getFlatFields();
+
+            $this->assertNotEmpty(
+                $fields,
+                sprintf('%s has a create page but an empty form schema.', class_basename($resource)),
+            );
+        }
     }
 
     public function test_every_master_list_screen_loads(): void

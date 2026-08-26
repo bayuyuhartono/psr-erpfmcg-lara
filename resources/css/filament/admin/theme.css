@@ -1,0 +1,11 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+/*
+ | Filament imports Tailwind with source detection switched off, and ships a
+ | precompiled stylesheet carrying only the classes Filament itself uses. The
+ | custom pages here — order entry, imports, backups — use others, so Tailwind
+ | has to be pointed at this application's own markup. Without these two lines
+ | those pages render unstyled.
+ */
+@source '../../../../app/Filament';
+@source '../../../../resources/views/filament';

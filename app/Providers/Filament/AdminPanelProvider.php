@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use Brick\Math\BigDecimal;
+use Filament\Enums\ThemeMode;
 use Filament\Forms\Components\TextInput;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -32,6 +33,18 @@ final class AdminPanelProvider extends PanelProvider
             ->login()
             ->brandName('FMCG Distributor ERP')
             ->colors(['primary' => Color::Indigo])
+            // Filament ships a precompiled stylesheet containing only the
+            // classes Filament itself uses. The custom pages here — order
+            // entry, imports, backups — use Tailwind utilities that are not in
+            // it, so the panel needs a theme Tailwind can build against this
+            // application's own views.
+            ->viteTheme('resources/css/filament/admin/theme.css')
+            // Light unless someone chooses otherwise. Following the operating
+            // system is the wrong default for a system used on shared office
+            // machines that nobody configures: staff read a dark screen as
+            // broken. The switcher stays, so the preference is still theirs.
+            ->defaultThemeMode(ThemeMode::Light)
+            ->themeSwitcher()
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([Dashboard::class])

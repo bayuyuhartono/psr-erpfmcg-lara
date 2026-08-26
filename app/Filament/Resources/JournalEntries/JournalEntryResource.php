@@ -4,7 +4,7 @@ namespace App\Filament\Resources\JournalEntries;
 
 use App\Domain\Accounting\Models\JournalEntry;
 use App\Filament\Resources\JournalEntries\Pages\ListJournalEntries;
-use App\Filament\Resources\JournalEntries\Schemas\JournalEntryForm;
+use App\Filament\Resources\JournalEntries\Schemas\JournalEntryInfolist;
 use App\Filament\Resources\JournalEntries\Tables\JournalEntriesTable;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -26,9 +26,13 @@ class JournalEntryResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Journal entries';
 
-    public static function form(Schema $schema): Schema
+    /**
+     * Read only, so this is an infolist and not a form. A ViewAction backed by
+     * a form calls `disabled()` on every component, which entries do not have.
+     */
+    public static function infolist(Schema $schema): Schema
     {
-        return JournalEntryForm::configure($schema);
+        return JournalEntryInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table

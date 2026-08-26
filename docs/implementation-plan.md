@@ -42,7 +42,7 @@ commented inline in the migration file.
 | 0.11 | Audit log observer | ✅ | Insert/update/delete old/new JSON; credentials redacted |
 | 0.12 | `DocumentNumberer` service | ✅ | Transaction + `lockForUpdate()` on the configured branch/type/period row. Rolls the prefix into a new period by itself, locking the previous period's row first — MySQL keeps NULLs distinct in the unique key, so branch-less sequences would otherwise race |
 | 0.13 | Filament v5 install + panel | ✅ | Filament 5.7 admin panel at `/admin` |
-| 0.14 | Auth, roles, permissions | ✅ | Native roles plus exact decimal threshold ceilings; inactive/unassigned users cannot enter panel. `hasPermission` honours the Administrator's `*` grant — it matched exactly before, so the one role meant to do everything could do nothing |
+| 0.14 | Auth, roles, permissions | ✅ | Native roles plus exact decimal threshold ceilings; inactive/unassigned users cannot enter panel. `hasPermission` honours the Administrator's `*` grant — it matched exactly before, so the one role meant to do everything could do nothing. `app:create-admin` makes the first account: none is seeded, because a seeded password is a password every installation shares |
 | 0.15 | Seeders: COA, roles, settings, journal mappings | ✅ | Idempotent; verified twice against MySQL |
 | 0.16 | Model factories + test harness | ✅ | PHPUnit against MySQL (`psr_erpfmcg_test`); core master/inventory factories and M0 feature tests. SQLite was dropped: it rejects the CHECK constraints and has different `FOR UPDATE` and NULL-in-unique-index semantics, so it tested an engine this product never runs on |
 

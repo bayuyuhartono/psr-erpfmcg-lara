@@ -33,8 +33,38 @@ installation, and the first thing support will ask for.
    The seed writes the chart of accounts, journal mappings, roles, number
    sequences and starting print layouts. It is idempotent — running it twice
    is safe.
-4. Create the first administrator, then check they can sign in at `/admin`.
-5. Go through [What to configure before going live](#what-to-configure-before-going-live).
+4. Create the first administrator:
+   ```bash
+   php artisan app:create-admin
+   ```
+   It asks for a name, an email and a password. **No account is seeded** — an
+   administrator whose password shipped in a seeder is one whose password is
+   known on every installation. Then check they can sign in at `/admin`.
+
+   Later accounts are made on the Users screen, or with the same command and
+   `--role=` for a warehouse supervisor, finance manager and so on.
+5. Build the front end. Without these, every screen loads unstyled:
+   ```bash
+   php artisan filament:assets
+   npm ci && npm run build
+   ```
+   An update package built with `app:package` already contains all of this, so
+   this step is only for a checkout — but it is also why a package built
+   *without* running it first produces an unstyled panel on the client's
+   machine. `app:package` refuses to build in that state.
+
+6. Go through [What to configure before going live](#what-to-configure-before-going-live).
+
+### Just looking at it?
+
+```bash
+php artisan db:seed --class=DemoDataSeeder
+```
+
+One plausible distributor — ten products with batches and shelf lives, eight
+outlets on different exchange days, two price lists, a rack walk and some
+discount rules. Not part of `db:seed`: a real installation imports the client's
+own masters.
 
 ---
 
@@ -118,6 +148,9 @@ is permissioned.
 | An order is stuck holding stock | `php artisan stock:release-expired-reservations --check` |
 | Collections do not know who to visit | `php artisan collections:today` |
 | "This installation was licensed for N users" | Someone is being activated beyond the seats bought. Deactivate an unused account, or buy more. **Nobody already working is affected** |
+| Nobody can sign in | No users exist yet, or the only one was deactivated. `php artisan app:create-admin` |
+| Screens load unstyled | `php artisan filament:assets` and `npm ci && npm run build` were never run. If only the *custom* pages look wrong — order entry, imports, backups — the panel's theme is missing: it is registered with `->viteTheme()` and built from `resources/css/filament/admin/theme.css`, whose `@source` lines tell Tailwind where this application's markup lives |
+| Order entry will not accept anything | The screen lists what is missing at the top — usually no warehouse, customers or prices yet |
 | A month will not close | See [Month end](#month-end) — the message says which of the two checks failed |
 | An invoice will not post | Almost always the three-way match: the invoice disagrees with the order price or the received quantity. The message gives both figures |
 
