@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use Brick\Math\BigDecimal;
+use Filament\Forms\Components\TextInput;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -47,5 +49,22 @@ final class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([Authenticate::class]);
+    }
+
+    /**
+     * Money and quantities are `BigDecimal` all the way down — that is what
+     * keeps them out of PHP float arithmetic. Filament's inputs expect a
+     * scalar, so without this every price, quantity and percentage field in
+     * every module dies rendering an edit form.
+     *
+     * This covers plain text inputs. Numeric ones need `DecimalInput`, because
+     * Filament's `->numeric()` casts state through `floatval()` before any
+     * formatting runs.
+     */
+    public function boot(): void
+    {
+        TextInput::configureUsing(fn (TextInput $input) => $input->formatStateUsing(
+            fn (mixed $state): mixed => $state instanceof BigDecimal ? (string) $state : $state,
+        ));
     }
 }

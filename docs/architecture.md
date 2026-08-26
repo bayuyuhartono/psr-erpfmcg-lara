@@ -61,12 +61,18 @@ app/
       Events/      what happened, past tense
 
   Support/
-    Posting/       StockPosting, JournalPoster, DocumentNumberer
+    Posting/       StockPosting, JournalPoster, StockReversal, guards
     Documents/     DocumentStates base, transition guards
+    Import/        all-or-nothing spreadsheet import
+    Uom/           base-unit conversion, line snapshots
+    ShelfLife/     expiry calculation, receipt and shipping thresholds
+    Pricing/       price list resolution, compounding discounts
     Money/         decimal casts, rounding rules
     Audit/         model observer writing audit_logs
 
   Filament/        Resources and Pages   ← thin
+    Concerns/      ReportsDomainRules
+    Forms/         DecimalInput
   Http/Api/        Controllers           ← thin
 ```
 
@@ -174,6 +180,26 @@ Actions are where validation that is *business* rules lives — shelf-life
 rejection, credit limit checks, three-way match tolerance. Form-shape validation
 stays in form requests and Filament schemas.
 
+### Filament stays thin, and two things make that work
+
+A resource is a form and a table. Where a rule exists, the form calls the
+Action — the product units manager calls `AddProductUom` rather than writing
+the row — because a form that saves directly becomes a second, quietly
+different set of rules the importer and API do not share.
+
+Domain rules throw, wherever they are broken. `ReportsDomainRules` catches
+`DomainException` on create and update pages and shows the message, so a locked
+base unit or a partner losing a role in use reads as a sentence rather than a
+stack trace. It catches nothing wider: a query error is a bug, and burying it
+in a toast would hide it.
+
+`DecimalInput` exists because Filament's `->numeric()` attaches a state cast
+that runs `floatval()` on the value. On a `BigDecimal` that throws, and if it
+did not it would put money back into float arithmetic — the one thing the
+decimal casts exist to prevent. Use it for anything declared with the
+`money()`, `qty()`, `cost()` or `percent()` macros; plain `->numeric()` is for
+genuine integers.
+
 ### Eloquent, directly
 
 **No repository layer.** Repositories over Eloquent duplicate the query builder
@@ -214,12 +240,83 @@ belongs in a counter-entry.
 The guards hang off model events, so a mass `update()` on the query builder
 slips past them. Documents are transitioned one at a time, deliberately.
 
+### Units
+
+The base unit is the only unit stock is stored in; `stock_ledger` knows nothing
+but `qty_base`. `UomConverter` converts on the way in and hands back a
+`UomSnapshot` carrying all four values a transaction line stores — unit,
+quantity, factor, base quantity — because the factor must be *copied* onto the
+line. Read it back from the master later and last year's invoices change
+quantity the day someone corrects a carton size.
+
+Changing a product's `base_uom` after it has moved is blocked on the model, not
+in an action: it would reinterpret every historical quantity rather than convert
+it, and the importer and API have to obey the rule as much as the UI does.
+
+### Bulk import
+
+Onboarding imports are all-or-nothing (F-02). A client who ends up with 1,800
+of 3,000 products and no reliable account of which is worse off than one whose
+import failed outright.
+
+`preview()` earns that by running the real import inside a transaction and
+throwing it away. Shape checks alone cannot tell you a row will be accepted —
+the domain rules decide, and the only way to ask them is to try. So the problem
+list a check produces is exactly the one a commit would produce, including
+shelf-life rejections and locked base units, rather than a weaker guess at it.
+
+Opening stock posts as a single document through `postDocument()`, not row by
+row: one claim, one transaction, and the moving average and journals that a
+bulk insert into `stock_ledger` would have skipped.
+
+### Pricing
+
+`PriceResolver` answers one question — what does this line cost — and returns a
+`PriceQuote` that maps onto the line's columns, the same shape as
+`UomSnapshot`. Prices and discount percentages are copied onto the line, never
+read back from the master.
+
+Discounts **compound sequentially**: 5% then 3% then 2% leaves 90.307% of the
+price, not 90%. Summing them is the most common way a distributor's invoices
+stop matching the principal's promotion terms, and it is invisible until
+someone reconciles a quarter. The percentages are kept apart rather than
+collapsed into one, because a customer asking why an invoice says what it says
+needs to see the tiers, not the product of them. A line records at most three;
+a fourth matching rule is refused rather than silently dropped.
+
+### Shelf life
+
+`ShelfLifePolicy` holds both rules from F-03. They differ in shape on purpose:
+`assertAcceptableOnReceipt()` throws, because accepting short-dated goods is a
+decision someone has to be stopped from making; `isShippable()` returns a
+boolean, because it filters the picking pool and a batch below the threshold is
+simply never offered (F-20).
+
+Expired stock is never shippable, whether or not a threshold is configured.
+Product settings that cannot work — expiry tracking without batch tracking, a
+receipt percentage of a shelf life that is not set — are refused on the model,
+because a misconfigured product passes every shelf-life check silently.
+
 ### Money and quantities
 
 Decimal all the way down. Columns are `decimal(18,2)` for money, `decimal(18,4)`
 for quantities and unit costs, created through the `money()`, `qty()`, `cost()`,
 and `percent()` Blueprint macros in `SchemaServiceProvider`. Casts keep them out
 of PHP float arithmetic. Rounding happens once, at presentation.
+
+### Sensitive fields
+
+What a product cost us — and therefore the margin on it — is the one thing an
+owner asks to be kept from the sales floor (F-70). It is a `view-cost` Gate
+ability over the `product.view_cost` permission, defined once so the screens,
+the exports and the Phase 2 API ask the same question rather than each
+deciding. Margin hides with cost, because a price against a known cost is the
+cost.
+
+The gate is the decision; it is not by itself containment. Anything that
+returns a record wholesale — an export, a JSON response — has to ask it too,
+and that is a review point for every new endpoint rather than something the
+model can enforce.
 
 ### Per-client variation is data, not code
 

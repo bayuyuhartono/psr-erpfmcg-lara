@@ -21,6 +21,10 @@ final class StockJournalRules
     /** ref_type => the posting key facing inventory. */
     private const COUNTERPART = [
         'goods_receipt' => 'payable',
+        // Opening stock at go-live faces equity, not an expense: the goods
+        // were bought before the system existed and their cost has already
+        // been accounted for somewhere else.
+        'opening_balance' => 'opening_equity',
         'purchase_return' => 'payable',
         'delivery' => 'cogs',
         'sales_return' => 'cogs',

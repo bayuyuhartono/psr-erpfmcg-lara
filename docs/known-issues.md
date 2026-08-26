@@ -104,7 +104,28 @@ method. Silent: the symptom is a document that posts twice.
 `StockReversal` is a bug. If it happens twice, move reversal onto its own entry
 point and make `post()` private.
 
-### 7. Kernel-posted journal entries carry no description
+### 7. Where consigned-in stock physically sits is still undecided
+
+Schema §7 says inbound consignment works through `owner_id`, with the goods in
+"a real warehouse". Section 4 also defines a `consignment_in` warehouse type
+carrying the principal's `partner_id`. Both are supported and they imply
+different invariants:
+
+- goods in a normal warehouse with `owner_id` set, or
+- goods in a `consignment_in` warehouse dedicated to one principal.
+
+Until it is settled, the kernel cannot check that `owner_id` and the warehouse
+agree — which is the check that would stop a principal's goods being posted as
+ours, the balance-sheet overstatement rule 4 exists to prevent. Right now only
+`owner_id` is enforced, and the warehouse type is not consulted.
+
+**Bites at:** P2.6, inbound consignment. Also affects what the expiry and
+valuation reports have to filter on.
+**Fix:** pick one, write it into the schema doc, then add the matching
+assertion to `StockPosting::validate()`. A settlement moving goods into our
+ownership while they sit still is the case that decides it.
+
+### 8. Kernel-posted journal entries carry no description
 
 `StockPosting` posts entries with `ref_type` and `ref_id` set but `description`
 null, so a general ledger listing shows blank narration on every automatic line.

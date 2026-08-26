@@ -35,10 +35,15 @@ final class StockPosting
      * primitive underneath it, and using it directly for a document skips the
      * claim that stops a double submission posting twice.
      *
+     * Returns how many movements were posted, not what each one produced: an
+     * opening-stock import runs thousands of lines through here, and keeping a
+     * result object per line — four hydrated models apiece — exhausts memory
+     * long before the transaction commits. A caller that needs the detail can
+     * read `stock_ledger` back by reference.
+     *
      * @param  list<StockMovement>  $movements  all from one document
-     * @return list<StockPostingResult>
      */
-    public function postDocument(array $movements): array
+    public function postDocument(array $movements): int
     {
         if ($movements === []) {
             throw new InvalidStockMovement('A document must post at least one stock movement.');
@@ -52,10 +57,16 @@ final class StockPosting
             }
         }
 
-        return DB::transaction(function () use ($movements, $first): array {
+        return DB::transaction(function () use ($movements, $first): int {
             $this->guard->claim($first->referenceType, $first->referenceId, $first->actorId);
 
-            return array_map(fn (StockMovement $movement): StockPostingResult => $this->post($movement), $movements);
+            $posted = 0;
+            foreach ($movements as $movement) {
+                $this->post($movement);
+                $posted++;
+            }
+
+            return $posted;
         });
     }
 

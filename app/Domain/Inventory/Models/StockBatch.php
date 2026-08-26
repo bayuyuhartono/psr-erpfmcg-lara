@@ -17,6 +17,14 @@ final class StockBatch extends DomainModel
 {
     protected $table = 'stock_batches';
 
+    protected function casts(): array
+    {
+        return [
+            'production_date' => 'immutable_date',
+            'expiry_date' => 'immutable_date',
+        ];
+    }
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class, 'product_id');

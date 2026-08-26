@@ -72,14 +72,14 @@ module that skips a step is the one that corrupts inventory.
 
 | # | Item | Status | Notes |
 |---|---|---|---|
-| 2.1 | Products + multi-level UOM | ⬜ | F-01; base unit locked once movement history exists |
-| 2.2 | Batch/expiry config per product | ⬜ | F-03; shelf life, receipt and shipping thresholds |
-| 2.3 | Business partners, multi-role | ⬜ | Supplier/customer/principal flags on one record |
-| 2.4 | Warehouses, rack locations, `pick_sequence` | ⬜ | |
-| 2.5 | Price lists, tiers, discount rules | ⬜ | Sequential compounding, never summed |
-| 2.6 | Filament resources for all masters | ⬜ | Thin: form + table, logic stays in actions |
-| 2.7 | Excel import: products, customers, opening stock | ⬜ | F-02; preview + problem rows, all-or-nothing, 3,000 rows < 2 min |
-| 2.8 | Cost/margin hidden from sales roles | ⬜ | F-70; field-level permission |
+| 2.1 | Products + multi-level UOM | ✅ | F-01. `UomConverter` turns any unit into base and hands back a `UomSnapshot` holding the four columns a line stores, factor copied not referenced. `AddProductUom` keeps one default per direction. `base_uom` is locked on the model once `stock_ledger` has a row, so the importer and the API obey it too |
+| 2.2 | Batch/expiry config per product | ✅ | F-03. `ShelfLifePolicy` computes expiry from production date and holds both thresholds; `ResolveStockBatch` is the one way inbound batches are created, so the receipt rejection cannot be walked around. Incoherent product config — expiry without batches, a percentage with no shelf life — is refused on the model |
+| 2.3 | Business partners, multi-role | ✅ | Flags plus `customers()`/`suppliers()`/`principals()` scopes. A partner must hold at least one role, and a role cannot be dropped while its documents exist — deactivate instead. `invoice_exchange_days` and `payment_days` are JSON day-of-month arrays, validated (F-50) |
+| 2.4 | Warehouses, rack locations, `pick_sequence` | ✅ | Type is one of the five, and the two consignment types require the partner whose side they represent while the others refuse one. `inPickOrder()` sorts the rack walk with unsequenced bays last (F-40) |
+| 2.5 | Price lists, tiers, discount rules | ✅ | `PriceResolver` picks the tier's price list, the volume band the quantity reaches, and every matching rule in `sequence` order. Percentages compound, flat amounts come off the line. A rule on a parent category reaches its children. Returns a `PriceQuote` mapping onto the line columns, plus the effective percent a discount threshold is compared against (F-32) |
+| 2.6 | Filament resources for all masters | ✅ | Eight resources plus relation managers for units, rack locations and prices, grouped into Catalogue / Partners / Pricing / Warehouse. `ReportsDomainRules` turns a broken domain rule into a notification instead of a 500. The units manager calls `AddProductUom` rather than saving the row itself |
+| 2.7 | Excel import: products, customers, opening stock | ✅ | F-02. Template download, a check step that runs the real import inside a rolled-back transaction so the problem list is the one a commit would give, then all-or-nothing commit. Opening stock posts as one document through the kernel, facing Opening Balance Equity. **Measured: 3,000 rows in 17.3s against a 120s target** |
+| 2.8 | Cost/margin hidden from sales roles | ✅ | F-70. A `view-cost` gate over the seeded `product.view_cost` permission, asked by the screens and later by the API. Average cost, stock value and margin are shown to a Sales Supervisor and hidden from a Sales Admin. Thresholds and the audit log were already in place from 0.14 and 0.11 |
 
 ---
 
@@ -224,7 +224,7 @@ interview script; none of it has been answered yet.
 | 6.4 | What proportion of payments arrive as postdated cheques? |
 | P2.5, P2.6 | Is there consignment to outlets, and how is it reconciled today? |
 | Phase ordering | What share of revenue is modern trade? Above 20% and it moves earlier |
-| 2.7 | What is in the legacy system, and what still lives in Excel beside it? |
+| Import mapping | What is in the legacy system, and what still lives in Excel beside it? The importer is built and the templates follow the entry forms (F-02); an answer changes a column mapping, not the machinery |
 | 9.x | What is the current server, who administers it, Windows or Linux? |
 
 ---

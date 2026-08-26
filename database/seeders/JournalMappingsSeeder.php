@@ -15,6 +15,7 @@ final class JournalMappingsSeeder extends Seeder
         // because that is what StockPosting looks up.
         $mappings = [
             'goods_receipt' => ['inventory' => '1103', 'payable' => '2101'],
+            'opening_balance' => ['inventory' => '1103', 'opening_equity' => '3102'],
             'purchase_return' => ['inventory' => '1103', 'payable' => '2101'],
             'delivery' => ['cogs' => '5101', 'inventory' => '1103'],
             'sales_return' => ['cogs' => '5101', 'inventory' => '1103'],

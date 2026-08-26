@@ -17,6 +17,9 @@ final class ChartOfAccountsSeeder extends Seeder
             ['2101', 'Trade Payables', 'liability', false],
             ['2102', 'VAT Payable', 'liability', false],
             ['3101', 'Retained Earnings', 'equity', false],
+            // Balances the opening stock import. Without it the whole opening
+            // inventory lands in an expense variance in month one.
+            ['3102', 'Opening Balance Equity', 'equity', false],
             ['4101', 'Sales Revenue', 'revenue', false],
             ['5101', 'Cost of Goods Sold', 'expense', false],
             ['5102', 'Inventory Variance', 'expense', false],

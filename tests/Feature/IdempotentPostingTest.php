@@ -42,12 +42,12 @@ final class IdempotentPostingTest extends TestCase
     {
         $reference = (string) Str::uuid7();
 
-        $results = app(StockPosting::class)->postDocument([
+        $posted = app(StockPosting::class)->postDocument([
             $this->movement($reference, '10', '100'),
             $this->movement($reference, '4', '250'),
         ]);
 
-        $this->assertCount(2, $results);
+        $this->assertSame(2, $posted);
         $this->assertDatabaseCount('stock_ledger', 2);
         $this->assertSame('14.0000', (string) ProductCost::firstOrFail()->total_qty);
         $this->assertDatabaseHas('document_postings', ['ref_type' => 'goods_receipt', 'ref_id' => $reference]);

@@ -13,6 +13,8 @@ $contexts = [
     '000800' => 'Consignment', '000900' => 'Finance', '001000' => 'Accounting',
 ];
 $models = [];
+$written = 0;
+$skipped = 0;
 $externalModels = ['users' => ['class' => 'User', 'fqcn' => 'App\\Models\\User']];
 
 foreach (glob($root.'/database/migrations/2026_08_25_*.php') as $file) {
@@ -178,7 +180,19 @@ foreach ($models as $table => $meta) {
     if (! is_dir($directory)) {
         mkdir($directory, 0777, true);
     }
-    file_put_contents("{$directory}/{$meta['class']}.php", $code);
+
+    // Scaffolds new tables only. The models are hand-maintained now — they
+    // carry state machines, guards, and casts this tool knows nothing about,
+    // and overwriting them would delete that silently.
+    $path = "{$directory}/{$meta['class']}.php";
+    if (file_exists($path)) {
+        $skipped++;
+
+        continue;
+    }
+
+    file_put_contents($path, $code);
+    $written++;
 }
 
-fwrite(STDOUT, 'Generated '.count($models)." ERP models.\n");
+fwrite(STDOUT, "Scaffolded {$written} new model(s); left {$skipped} existing model(s) alone.\n");

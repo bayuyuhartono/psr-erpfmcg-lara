@@ -10,6 +10,20 @@ final class PriceList extends DomainModel
 {
     protected $table = 'price_lists';
 
+    protected function casts(): array
+    {
+        return [
+            'starts_on' => 'immutable_date',
+            'ends_on' => 'immutable_date',
+            'active' => 'boolean',
+        ];
+    }
+
+    public function customerTiers(): HasMany
+    {
+        return $this->hasMany(CustomerTier::class, 'price_list_id');
+    }
+
     public function priceListItems(): HasMany
     {
         return $this->hasMany(PriceListItem::class, 'price_list_id');
