@@ -134,8 +134,12 @@ final class LocalizationTest extends TestCase
         // A translation nobody looks up is dead weight that reads as coverage.
         $orphans = array_values(array_filter(
             $keys,
+            // Matched up to the closing quote, not the closing paren: a key
+            // taking replacements ends `__('...', [...])` and would otherwise
+            // read as unused.
             fn (string $key): bool => ! in_array($key, $dynamic, true)
-                && ! str_contains($haystack, "__('".$key."')"),
+                && ! str_contains($haystack, "__('".$key."')")
+                && ! str_contains($haystack, "__('".$key."',"),
         ));
 
         $this->assertSame([], $orphans, 'Translated but never used: '.implode(', ', $orphans));

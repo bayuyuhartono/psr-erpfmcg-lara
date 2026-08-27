@@ -4,6 +4,9 @@ namespace App\Providers\Filament;
 
 use App\Domain\Masters\Services\CompanyIdentity;
 use App\Filament\Auth\Login;
+use App\Filament\Widgets\BusinessOverview;
+use App\Filament\Widgets\ExpiringStock;
+use App\Filament\Widgets\SalesTrend;
 use App\Http\Middleware\SetLocale;
 use Brick\Math\BigDecimal;
 use Filament\Enums\ThemeMode;
@@ -18,8 +21,6 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -79,7 +80,10 @@ final class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([Dashboard::class])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([AccountWidget::class, FilamentInfoWidget::class])
+            // The stock Filament widgets say who is logged in and which
+            // version of Filament this is. Neither is what a distributor opens
+            // the system for.
+            ->widgets([BusinessOverview::class, SalesTrend::class, ExpiringStock::class])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
