@@ -20,8 +20,8 @@ class BrandsTable
             ->columns([
                 TextColumn::make('code')->searchable()->sortable(),
                 TextColumn::make('name')->searchable()->sortable(),
-                TextColumn::make('principal.name')->placeholder('unbranded')->searchable(),
-                TextColumn::make('products_count')->counts('products')->label('SKUs')->alignEnd(),
+                TextColumn::make('principal.name')->placeholder(__('unbranded'))->searchable(),
+                TextColumn::make('products_count')->counts('products')->label(__('SKUs'))->alignEnd(),
                 IconColumn::make('active')->boolean(),
             ])
             ->defaultSort('name')

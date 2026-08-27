@@ -26,7 +26,10 @@ class PriceListResource extends Resource
 
     protected static ?int $navigationSort = 10;
 
-    protected static ?string $pluralModelLabel = 'Price lists';
+    public static function getPluralModelLabel(): string
+    {
+        return __('Price lists');
+    }
 
     public static function form(Schema $schema): Schema
     {

@@ -24,15 +24,15 @@ class DiscountRuleForm
                 TextInput::make('name')->required()->maxLength(255)->columnSpanFull(),
                 TextInput::make('sequence')
                     ->numeric()->default(1)->required()
-                    ->helperText('Discounts compound in this order: 5% then 3% leaves 92.15%, not 92%.'),
+                    ->helperText(__('Discounts compound in this order: 5% then 3% leaves 92.15%, not 92%.')),
             ]),
 
-            Section::make('What it applies to')->columns(2)->schema([
+            Section::make(__('What it applies to'))->columns(2)->schema([
                 Select::make('scope')->options([
                     'all' => 'Everything', 'product' => 'One product', 'brand' => 'A brand', 'category' => 'A category',
                 ])->default('all')->required()->live(),
                 Select::make('scope_id')
-                    ->label('Which')
+                    ->label(__('Which'))
                     ->options(fn (callable $get): array => match ($get('scope')) {
                         'product' => Product::query()->pluck('name', 'id')->all(),
                         'brand' => Brand::query()->pluck('name', 'id')->all(),
@@ -47,12 +47,12 @@ class DiscountRuleForm
                         : null),
             ]),
 
-            Section::make('Who gets it')->columns(2)->schema([
+            Section::make(__('Who gets it'))->columns(2)->schema([
                 Select::make('target')->options([
                     'all' => 'Everyone', 'customer' => 'One customer', 'tier' => 'A tier', 'territory' => 'A territory',
                 ])->default('all')->required()->live(),
                 Select::make('target_id')
-                    ->label('Which')
+                    ->label(__('Which'))
                     ->options(fn (callable $get): array => match ($get('target')) {
                         'customer' => BusinessPartner::query()->customers()->pluck('name', 'id')->all(),
                         'tier' => CustomerTier::query()->pluck('name', 'id')->all(),
@@ -64,11 +64,11 @@ class DiscountRuleForm
                     ->visible(fn (callable $get): bool => $get('target') !== 'all'),
             ]),
 
-            Section::make('How much, and when')->columns(2)->schema([
-                DecimalInput::percent('percent')->label('Percent off'),
-                DecimalInput::money('amount')->label('Amount off the line'),
-                DecimalInput::quantity('min_qty')->label('From quantity'),
-                DecimalInput::money('min_amount')->label('From line value'),
+            Section::make(__('How much, and when'))->columns(2)->schema([
+                DecimalInput::percent('percent')->label(__('Percent off')),
+                DecimalInput::money('amount')->label(__('Amount off the line')),
+                DecimalInput::quantity('min_qty')->label(__('From quantity')),
+                DecimalInput::money('min_amount')->label(__('From line value')),
                 DatePicker::make('starts_on'),
                 DatePicker::make('ends_on')->after('starts_on'),
             ]),

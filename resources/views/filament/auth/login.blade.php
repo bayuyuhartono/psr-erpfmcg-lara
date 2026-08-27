@@ -18,7 +18,7 @@
         {{ $this->getHeading() }}
     </h1>
     <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-        Use the account your administrator set up for you.
+        {{ __('Use the account your administrator set up for you.') }}
     </p>
 
     <div class="mt-8">

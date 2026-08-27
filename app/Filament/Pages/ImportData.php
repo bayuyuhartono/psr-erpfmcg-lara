@@ -38,7 +38,10 @@ class ImportData extends Page
 
     protected static ?int $navigationSort = 90;
 
-    protected static ?string $title = 'Import from Excel';
+    public function getTitle(): string
+    {
+        return __('Import from Excel');
+    }
 
     /** @var array<string, mixed> */
     public array $data = [];
@@ -79,7 +82,7 @@ class ImportData extends Page
             ->statePath('data')
             ->components([
                 Select::make('type')
-                    ->label('What are you importing')
+                    ->label(__('What are you importing'))
                     ->options([
                         'products' => 'Products',
                         'customers' => 'Customers',
@@ -88,9 +91,9 @@ class ImportData extends Page
                     ->required()
                     ->live()
                     ->afterStateUpdated(fn () => $this->reset(['checked', 'problems', 'sample', 'rowCount']))
-                    ->helperText('Opening stock needs its products imported first.'),
+                    ->helperText(__('Opening stock needs its products imported first.')),
                 FileUpload::make('file')
-                    ->label('Spreadsheet')
+                    ->label(__('Spreadsheet'))
                     ->acceptedFileTypes([
                         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                         'text/csv',
@@ -105,7 +108,7 @@ class ImportData extends Page
     {
         return [
             Action::make('template')
-                ->label('Download template')
+                ->label(__('Download template'))
                 ->icon(Heroicon::OutlinedArrowDownTray)
                 ->action(fn (): BinaryFileResponse => $this->downloadTemplate()),
         ];

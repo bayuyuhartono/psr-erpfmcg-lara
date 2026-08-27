@@ -26,7 +26,10 @@ class BrandResource extends Resource
 
     protected static ?int $navigationSort = 20;
 
-    protected static ?string $pluralModelLabel = 'Brands';
+    public static function getPluralModelLabel(): string
+    {
+        return __('Brands');
+    }
 
     public static function form(Schema $schema): Schema
     {

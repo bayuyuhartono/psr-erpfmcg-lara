@@ -26,7 +26,10 @@ class PrintTemplateResource extends Resource
 
     protected static ?int $navigationSort = 50;
 
-    protected static ?string $pluralModelLabel = 'Print templates';
+    public static function getPluralModelLabel(): string
+    {
+        return __('Print templates');
+    }
 
     public static function form(Schema $schema): Schema
     {

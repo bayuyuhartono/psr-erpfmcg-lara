@@ -26,7 +26,10 @@ class CustomerTierResource extends Resource
 
     protected static ?int $navigationSort = 20;
 
-    protected static ?string $pluralModelLabel = 'Customer tiers';
+    public static function getPluralModelLabel(): string
+    {
+        return __('Customer tiers');
+    }
 
     public static function form(Schema $schema): Schema
     {

@@ -47,7 +47,13 @@
             </div>
         </div>
 
-        <div class="flex w-full flex-col justify-center bg-white px-6 py-12 sm:px-12 lg:w-1/2 xl:w-[45%] dark:bg-gray-950">
+        <div class="relative flex w-full flex-col justify-center bg-white px-6 py-12 sm:px-12 lg:w-1/2 xl:w-[45%] dark:bg-gray-950">
+            {{-- Before signing in, not after: someone who cannot read the form
+                 cannot be asked to sign in first to change its language. --}}
+            <div class="absolute right-6 top-6">
+                @include('filament.language-switcher')
+            </div>
+
             <main id="fi-main-content" tabindex="-1" class="mx-auto w-full max-w-sm">
                 {{ $slot }}
             </main>

@@ -30,14 +30,22 @@ final class NavigationOrderTest extends TestCase
 
         Filament::setCurrentPanel('admin');
 
-        $groups = collect(Filament::getNavigation())
+        // The key is what orders a group and what the resources declare; the
+        // label is translated and would pin this test to one language.
+        $groups = array_keys(Filament::getPanel('admin')->getNavigationGroups());
+
+        $this->assertSame(self::EXPECTED, $groups);
+        $this->assertSame('System', end($groups));
+
+        // The rendered sidebar follows that order, under the labels a user
+        // actually reads.
+        $rendered = collect(Filament::getNavigation())
             ->map(fn ($group): ?string => $group->getLabel())
             ->filter()
             ->values()
             ->all();
 
-        $this->assertSame(self::EXPECTED, $groups);
-        $this->assertSame('System', end($groups));
+        $this->assertSame(array_map(fn (string $g): string => __($g), self::EXPECTED), $rendered);
     }
 
     public function test_every_declared_group_is_one_a_resource_actually_uses(): void

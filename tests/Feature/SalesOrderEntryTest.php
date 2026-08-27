@@ -142,9 +142,11 @@ final class SalesOrderEntryTest extends TestCase
     {
         Livewire::test(SalesOrderEntry::class)
             ->set('customerId', $this->customer->id)
-            ->assertSee('Credit limit')
-            ->assertSee('Already owes')
-            ->assertSee('Left after this');
+            // Through __(), so this holds in either language rather than
+            // pinning the screen to English.
+            ->assertSee(__('Credit limit'))
+            ->assertSee(__('Already owes'))
+            ->assertSee(__('Left after this'));
     }
 
     public function test_the_credit_panel_warns_before_the_order_is_saved(): void

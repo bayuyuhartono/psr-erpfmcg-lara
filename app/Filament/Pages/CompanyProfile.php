@@ -34,7 +34,10 @@ class CompanyProfile extends Page
     // Above Backups: this is the first screen touched on a new installation.
     protected static ?int $navigationSort = 5;
 
-    protected static ?string $title = 'Company profile';
+    public function getTitle(): string
+    {
+        return __('Company profile');
+    }
 
     /** @var array<string, mixed> */
     public array $data = [];
@@ -60,18 +63,18 @@ class CompanyProfile extends Page
         return $schema
             ->statePath('data')
             ->components([
-                Section::make('Identity')
-                    ->description('Used on invoices and delivery notes as well as on screen, so it should be the registered name.')
+                Section::make(__('Identity'))
+                    ->description(__('Used on invoices and delivery notes as well as on screen, so it should be the registered name.'))
                     ->schema([
                         TextInput::make('legal_name')
-                            ->label('Company name')
+                            ->label(__('Company name'))
                             ->required()
                             ->maxLength(255)
                             ->placeholder(config('app.name')),
                     ]),
 
-                Section::make('Logo')
-                    ->description('Replaces the company name in the header and on the login screen. Leave it empty to show the name instead.')
+                Section::make(__('Logo'))
+                    ->description(__('Replaces the company name in the header and on the login screen. Leave it empty to show the name instead.'))
                     ->schema([
                         FileUpload::make('logo_url')
                             ->hiddenLabel()
@@ -88,11 +91,11 @@ class CompanyProfile extends Page
                             ->getUploadedFileNameForStorageUsing(
                                 fn ($file): string => Str::uuid7().'.'.$file->getClientOriginalExtension(),
                             )
-                            ->helperText('PNG, JPEG, SVG or WebP, up to 2 MB. It is displayed about 32 pixels tall, so a wide logo reads better than a tall one.'),
+                            ->helperText(__('PNG, JPEG, SVG or WebP, up to 2 MB. It is displayed about 32 pixels tall, so a wide logo reads better than a tall one.')),
                     ]),
 
-                Section::make('Browser tab icon')
-                    ->description('Shown on the tab and in bookmarks. Leave it empty to use the logo, which works if the logo is roughly square.')
+                Section::make(__('Browser tab icon'))
+                    ->description(__('Shown on the tab and in bookmarks. Leave it empty to use the logo, which works if the logo is roughly square.'))
                     ->schema([
                         FileUpload::make('favicon_url')
                             ->hiddenLabel()
@@ -105,7 +108,7 @@ class CompanyProfile extends Page
                             ->getUploadedFileNameForStorageUsing(
                                 fn ($file): string => Str::uuid7().'.'.$file->getClientOriginalExtension(),
                             )
-                            ->helperText('Square, ideally 32×32 or larger. A wide logo shrunk to a tab is unreadable, which is why this is separate.'),
+                            ->helperText(__('Square, ideally 32×32 or larger. A wide logo shrunk to a tab is unreadable, which is why this is separate.')),
                     ]),
             ]);
     }
@@ -115,7 +118,7 @@ class CompanyProfile extends Page
     {
         return [
             Action::make('save')
-                ->label('Save')
+                ->label(__('Save'))
                 ->icon(Heroicon::OutlinedCheck)
                 ->action('save'),
         ];

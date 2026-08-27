@@ -18,8 +18,8 @@ class CategoriesTable
         return $table
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),
-                TextColumn::make('parent.name')->label('Sits under')->placeholder('top level'),
-                TextColumn::make('products_count')->counts('products')->label('SKUs')->alignEnd(),
+                TextColumn::make('parent.name')->label(__('Sits under'))->placeholder(__('top level')),
+                TextColumn::make('products_count')->counts('products')->label(__('SKUs'))->alignEnd(),
             ])
             ->defaultSort('name')
             ->filters([TrashedFilter::make()])

@@ -19,18 +19,18 @@ class JournalMappingForm
         return $schema->components([
             Section::make()
                 ->columns(3)
-                ->description('Which account each kind of document posts to. Every client\'s chart is different, so this is configuration rather than code.')
+                ->description(__('Which account each kind of document posts to. Every client\'s chart is different, so this is configuration rather than code.'))
                 ->schema([
                     Select::make('document_type')
                         ->options(fn (): array => self::existing('document_type'))
                         ->searchable()->required()
-                        ->helperText('The ledger reference type, e.g. goods_receipt.'),
+                        ->helperText(__('The ledger reference type, e.g. goods_receipt.')),
                     Select::make('posting_key')
                         ->options(fn (): array => self::existing('posting_key'))
                         ->searchable()->required()
-                        ->helperText('The role the account plays, e.g. inventory.'),
+                        ->helperText(__('The role the account plays, e.g. inventory.')),
                     Select::make('account_id')
-                        ->label('Account')
+                        ->label(__('Account'))
                         ->relationship('account', 'name')
                         ->getOptionLabelFromRecordUsing(fn (ChartOfAccount $record): string => "{$record->code} — {$record->name}")
                         ->searchable(['code', 'name'])->preload()->required(),

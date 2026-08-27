@@ -34,7 +34,10 @@ class Backups extends Page
 
     protected static ?int $navigationSort = 10;
 
-    protected static ?string $title = 'Backups';
+    public function getTitle(): string
+    {
+        return __('Backups');
+    }
 
     public ?string $verified = null;
 
@@ -48,7 +51,7 @@ class Backups extends Page
     {
         return [
             Action::make('create')
-                ->label('Take a backup now')
+                ->label(__('Take a backup now'))
                 ->icon(Heroicon::OutlinedArrowDownTray)
                 ->action(function (): void {
                     try {

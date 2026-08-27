@@ -17,9 +17,9 @@ class JournalMappingsTable
         return $table
             ->columns([
                 TextColumn::make('document_type')->badge()->searchable()->sortable(),
-                TextColumn::make('posting_key')->label('Posts as')->searchable(),
-                TextColumn::make('account.code')->label('Account')->sortable(),
-                TextColumn::make('account.name')->label('')->color('gray'),
+                TextColumn::make('posting_key')->label(__('Posts as'))->searchable(),
+                TextColumn::make('account.code')->label(__('Account'))->sortable(),
+                TextColumn::make('account.name')->label(__(''))->color('gray'),
             ])
             ->defaultSort('document_type')
             ->groups(['document_type'])

@@ -24,8 +24,8 @@ class AccountingPeriodsTable
                 TextColumn::make('status')->badge()->color(
                     fn (string $state): string => $state === 'closed' ? 'danger' : 'success',
                 ),
-                TextColumn::make('closedBy.full_name')->label('Closed by')->placeholder('—'),
-                TextColumn::make('closed_at')->dateTime()->placeholder('—'),
+                TextColumn::make('closedBy.full_name')->label(__('Closed by'))->placeholder(__('—')),
+                TextColumn::make('closed_at')->dateTime()->placeholder(__('—')),
             ])
             // Most recent first: the month someone is asking about is the one
             // that just ended.

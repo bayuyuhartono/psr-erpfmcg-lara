@@ -29,17 +29,17 @@ class PrintTemplateForm
                     'a4' => 'A4 — laser or PDF',
                 ])->required()->live(),
                 TextInput::make('name')->required()->maxLength(255),
-                TextInput::make('width_chars')->label('Width (characters)')->numeric()->default(80)
+                TextInput::make('width_chars')->label(__('Width (characters)'))->numeric()->default(80)
                     ->visible(fn (callable $get): bool => $get('format') === 'dotmatrix')
-                    ->helperText('80 for standard continuous form, 136 for wide.'),
+                    ->helperText(__('80 for standard continuous form, 136 for wide.')),
                 TextInput::make('copies')->numeric()->default(2)
                     ->visible(fn (callable $get): bool => $get('format') === 'dotmatrix')
-                    ->helperText('How many parts the paper has. Printed as one run separated by form feeds.'),
+                    ->helperText(__('How many parts the paper has. Printed as one run separated by form feeds.')),
                 Toggle::make('active')->default(true),
             ]),
 
-            Section::make('Layout')
-                ->description('{{ invoice.number }} inserts a value. Formatters chain: {{ invoice.total | money | rpad:14 }}. {{# lines }} … {{/ lines }} repeats per row. {{ copy }} becomes ORIGINAL, COPY, FILE COPY.')
+            Section::make(__('Layout'))
+                ->description(__('{{ invoice.number }} inserts a value. Formatters chain: {{ invoice.total | money | rpad:14 }}. {{# lines }} … {{/ lines }} repeats per row. {{ copy }} becomes ORIGINAL, COPY, FILE COPY.'))
                 ->schema([
                     Textarea::make('body')
                         ->required()

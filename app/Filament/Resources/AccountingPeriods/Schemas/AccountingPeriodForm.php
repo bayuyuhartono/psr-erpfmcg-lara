@@ -21,8 +21,8 @@ class AccountingPeriodForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Period')
-                ->description('Closing runs checks and records who did it, so the status is not editable here.')
+            Section::make(__('Period'))
+                ->description(__('Closing runs checks and records who did it, so the status is not editable here.'))
                 ->columns(2)
                 ->schema([
                     TextInput::make('year')
@@ -38,7 +38,7 @@ class AccountingPeriodForm
                     TextInput::make('status')
                         ->disabled()
                         ->default('open')
-                        ->helperText('Closed with `php artisan accounting:close`, which refuses if the books are not ready.'),
+                        ->helperText(__('Closed with `php artisan accounting:close`, which refuses if the books are not ready.')),
                 ]),
         ]);
     }

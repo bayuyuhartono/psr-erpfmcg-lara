@@ -192,6 +192,7 @@ These are data, not code — all editable in the admin panel.
 | Products, customers, opening stock | Catalogue → Import from Excel | Download the template, fill it in, check it, then import. One bad row imports nothing |
 | Warehouses and rack locations | Warehouse → Warehouses | `pick_sequence` is the order pickers walk the racks. Without it, picking lists sort last |
 | Credit limits and exchange days | Partners → Business partners | Drives credit holds and the collections day list |
+| Language | Switcher in the user menu, and on the login screen | Indonesian by default. English is kept for the accountant and the installer; the choice is per browser session, not per user |
 | Company name, logo, tab icon | System → Company profile | The name prints on every invoice. A logo replaces the wordmark in the header and on the login screen; the tab icon is separate because a wide logo is unreadable at 16px |
 
 ### Two accounting choices made without an accountant

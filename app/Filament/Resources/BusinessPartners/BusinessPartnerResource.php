@@ -26,7 +26,10 @@ class BusinessPartnerResource extends Resource
 
     protected static ?int $navigationSort = 10;
 
-    protected static ?string $pluralModelLabel = 'Business partners';
+    public static function getPluralModelLabel(): string
+    {
+        return __('Business partners');
+    }
 
     public static function form(Schema $schema): Schema
     {

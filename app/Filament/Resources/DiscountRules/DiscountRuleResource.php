@@ -26,7 +26,10 @@ class DiscountRuleResource extends Resource
 
     protected static ?int $navigationSort = 20;
 
-    protected static ?string $pluralModelLabel = 'Discount rules';
+    public static function getPluralModelLabel(): string
+    {
+        return __('Discount rules');
+    }
 
     public static function form(Schema $schema): Schema
     {

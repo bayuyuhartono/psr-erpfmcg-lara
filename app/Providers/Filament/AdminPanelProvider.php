@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Domain\Masters\Services\CompanyIdentity;
 use App\Filament\Auth\Login;
+use App\Http\Middleware\SetLocale;
 use Brick\Math\BigDecimal;
 use Filament\Enums\ThemeMode;
 use Filament\Forms\Components\TextInput;
@@ -11,12 +12,15 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
+use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -42,6 +46,10 @@ final class AdminPanelProvider extends PanelProvider
             ->brandLogo(fn (): ?string => app(CompanyIdentity::class)->logoUrl())
             ->brandLogoHeight('2rem')
             ->favicon(fn (): ?string => app(CompanyIdentity::class)->faviconUrl())
+            ->renderHook(
+                PanelsRenderHook::USER_MENU_BEFORE,
+                fn (): View => view('filament.user-menu-language'),
+            )
             ->colors(['primary' => Color::Indigo])
             // Filament ships a precompiled stylesheet containing only the
             // classes Filament itself uses. The custom pages here — order
@@ -59,15 +67,14 @@ final class AdminPanelProvider extends PanelProvider
             // alphabetical by accident and put System in the middle. Ordered by
             // how often a distributor's staff actually open them: order entry
             // all day, the chart of accounts at month end, backups rarely.
-            ->navigationGroups([
-                'Sales',
-                'Partners',
-                'Catalogue',
-                'Pricing',
-                'Warehouse',
-                'Accounting',
-                'System',
-            ])
+            // The keys stay English because that is what the resources declare;
+            // only the label is translated. Renaming a key here would quietly
+            // unorder the group rather than error.
+            ->navigationGroups(collect([
+                'Sales', 'Partners', 'Catalogue', 'Pricing', 'Warehouse', 'Accounting', 'System',
+            ])->mapWithKeys(fn (string $group): array => [
+                $group => NavigationGroup::make($group)->label(fn (): string => __($group)),
+            ])->all())
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([Dashboard::class])
@@ -77,6 +84,10 @@ final class AdminPanelProvider extends PanelProvider
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
+                // After StartSession: the chosen language lives in the session,
+                // so applying it any earlier reads an empty one and silently
+                // falls back to the default on every request.
+                SetLocale::class,
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,

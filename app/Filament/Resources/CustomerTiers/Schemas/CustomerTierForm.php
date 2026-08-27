@@ -12,14 +12,14 @@ class CustomerTierForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Tier')->columns(2)->schema([
+            Section::make(__('Tier'))->columns(2)->schema([
                 TextInput::make('name')->required()->unique(ignoreRecord: true)->maxLength(255)
-                    ->placeholder('Wholesale, Retail, Modern trade'),
+                    ->placeholder(__('Wholesale, Retail, Modern trade')),
                 Select::make('price_list_id')
-                    ->label('Price list')
+                    ->label(__('Price list'))
                     ->relationship('priceList', 'name')
                     ->searchable()->preload()
-                    ->helperText('Every customer on this tier is priced from here.'),
+                    ->helperText(__('Every customer on this tier is priced from here.')),
             ]),
         ]);
     }

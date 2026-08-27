@@ -18,8 +18,8 @@ class CustomerTiersTable
         return $table
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),
-                TextColumn::make('priceList.name')->label('Price list')->placeholder('none — customers here cannot be priced'),
-                TextColumn::make('business_partners_count')->counts('businessPartners')->label('Customers')->alignEnd(),
+                TextColumn::make('priceList.name')->label(__('Price list'))->placeholder(__('none — customers here cannot be priced')),
+                TextColumn::make('business_partners_count')->counts('businessPartners')->label(__('Customers'))->alignEnd(),
             ])
             ->defaultSort('name')
             ->filters([TrashedFilter::make()])

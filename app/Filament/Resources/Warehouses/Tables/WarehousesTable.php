@@ -21,17 +21,17 @@ class WarehousesTable
             ->columns([
                 TextColumn::make('code')->searchable()->sortable(),
                 TextColumn::make('name')->searchable()->sortable(),
-                TextColumn::make('warehouse_type')->label('Type')->badge()->formatStateUsing(
+                TextColumn::make('warehouse_type')->label(__('Type'))->badge()->formatStateUsing(
                     fn (string $state): string => str_replace('_', ' ', $state),
                 ),
-                TextColumn::make('partner.name')->placeholder('—')->toggleable(),
-                TextColumn::make('branch.name')->placeholder('—')->toggleable(),
-                TextColumn::make('warehouse_locations_count')->counts('warehouseLocations')->label('Bays')->alignEnd(),
+                TextColumn::make('partner.name')->placeholder(__('—'))->toggleable(),
+                TextColumn::make('branch.name')->placeholder(__('—'))->toggleable(),
+                TextColumn::make('warehouse_locations_count')->counts('warehouseLocations')->label(__('Bays'))->alignEnd(),
                 IconColumn::make('active')->boolean(),
             ])
             ->defaultSort('code')
             ->filters([
-                SelectFilter::make('warehouse_type')->label('Type')->options([
+                SelectFilter::make('warehouse_type')->label(__('Type'))->options([
                     'normal' => 'Normal', 'quarantine' => 'Quarantine', 'damaged' => 'Damaged goods',
                     'consignment_in' => 'Consignment in', 'consignment_out' => 'Consignment out',
                 ]),

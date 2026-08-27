@@ -13,9 +13,9 @@
                 <table class="w-full text-sm">
                     <thead class="text-gray-500 dark:text-gray-400">
                         <tr class="text-left">
-                            <th class="pb-2 font-medium">File</th>
-                            <th class="pb-2 font-medium">Taken</th>
-                            <th class="pb-2 text-right font-medium">Size</th>
+                            <th class="pb-2 font-medium">{{ __('File') }}</th>
+                            <th class="pb-2 font-medium">{{ __('Taken') }}</th>
+                            <th class="pb-2 text-right font-medium">{{ __('Size') }}</th>
                             <th class="pb-2"></th>
                         </tr>
                     </thead>
@@ -31,7 +31,7 @@
                                             tag="button"
                                             wire:click="download('{{ $backup['name'] }}')"
                                             size="sm"
-                                        >Download</x-filament::link>
+                                        >{{ __('Download') }}</x-filament::link>
 
                                         <x-filament::link
                                             tag="button"
@@ -39,7 +39,7 @@
                                             wire:loading.attr="disabled"
                                             wire:target="verify('{{ $backup['name'] }}')"
                                             size="sm"
-                                        >Check it restores</x-filament::link>
+                                        >{{ __('Check it restores') }}</x-filament::link>
 
                                         <x-filament::link
                                             tag="button"
@@ -47,7 +47,7 @@
                                             size="sm"
                                             wire:click="delete('{{ $backup['name'] }}')"
                                             wire:confirm="Delete {{ $backup['name'] }}? This cannot be undone."
-                                        >Delete</x-filament::link>
+                                        >{{ __('Delete') }}</x-filament::link>
                                     </div>
                                 </td>
                             </tr>
@@ -57,7 +57,7 @@
             </div>
         @else
             <p class="text-sm text-gray-500 dark:text-gray-400">
-                No backups yet. Take one before the next upgrade.
+                {{ __('No backups yet. Take one before the next upgrade.') }}
             </p>
         @endif
 

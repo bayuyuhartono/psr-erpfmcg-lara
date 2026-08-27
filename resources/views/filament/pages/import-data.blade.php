@@ -5,7 +5,7 @@
 
             <x-slot name="footerActions">
                 <x-filament::button type="submit" outlined wire:loading.attr="disabled" wire:target="check">
-                    Check the file
+                    {{ __('Check the file') }}
                 </x-filament::button>
 
                 <x-filament::button wire:click="commit" wire:loading.attr="disabled" wire:target="commit" :disabled="! $this->isImportable()">
@@ -22,7 +22,7 @@
         @if ($this->problems)
             <x-filament::section class="mt-6" heading="Rows that need fixing">
                 <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Nothing has been saved. Correct these in the spreadsheet and check it again.
+                    {{ __('Nothing has been saved. Correct these in the spreadsheet and check it again.') }}
                 </p>
 
                 <ul class="mt-4 space-y-1 text-sm">

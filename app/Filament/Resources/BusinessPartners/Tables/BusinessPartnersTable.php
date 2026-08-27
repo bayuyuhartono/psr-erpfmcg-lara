@@ -21,20 +21,20 @@ class BusinessPartnersTable
             ->columns([
                 TextColumn::make('code')->searchable()->sortable(),
                 TextColumn::make('name')->searchable()->sortable()->wrap(),
-                IconColumn::make('is_customer')->label('Cust')->boolean(),
-                IconColumn::make('is_supplier')->label('Supp')->boolean(),
-                IconColumn::make('is_principal')->label('Prin')->boolean(),
-                TextColumn::make('tier.name')->toggleable()->placeholder('—'),
+                IconColumn::make('is_customer')->label(__('Cust'))->boolean(),
+                IconColumn::make('is_supplier')->label(__('Supp'))->boolean(),
+                IconColumn::make('is_principal')->label(__('Prin'))->boolean(),
+                TextColumn::make('tier.name')->toggleable()->placeholder(__('—')),
                 TextColumn::make('credit_limit')->numeric(decimalPlaces: 2)->alignEnd()->toggleable(),
-                IconColumn::make('on_hold')->label('Hold')->boolean()->falseColor('gray'),
+                IconColumn::make('on_hold')->label(__('Hold'))->boolean()->falseColor('gray'),
                 IconColumn::make('active')->boolean(),
             ])
             ->defaultSort('name')
             ->filters([
-                TernaryFilter::make('is_customer')->label('Customers'),
-                TernaryFilter::make('is_supplier')->label('Suppliers'),
-                TernaryFilter::make('is_principal')->label('Principals'),
-                TernaryFilter::make('on_hold')->label('On hold'),
+                TernaryFilter::make('is_customer')->label(__('Customers')),
+                TernaryFilter::make('is_supplier')->label(__('Suppliers')),
+                TernaryFilter::make('is_principal')->label(__('Principals')),
+                TernaryFilter::make('on_hold')->label(__('On hold')),
                 TrashedFilter::make(),
             ])
             ->recordActions([EditAction::make()])

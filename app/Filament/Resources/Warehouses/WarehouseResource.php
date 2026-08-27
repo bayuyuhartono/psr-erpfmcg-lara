@@ -26,7 +26,10 @@ class WarehouseResource extends Resource
 
     protected static ?int $navigationSort = 10;
 
-    protected static ?string $pluralModelLabel = 'Warehouses';
+    public static function getPluralModelLabel(): string
+    {
+        return __('Warehouses');
+    }
 
     public static function form(Schema $schema): Schema
     {

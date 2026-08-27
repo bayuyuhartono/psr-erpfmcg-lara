@@ -19,10 +19,10 @@ class PriceListsTable
         return $table
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),
-                TextColumn::make('starts_on')->date()->placeholder('always'),
-                TextColumn::make('ends_on')->date()->placeholder('open ended'),
-                TextColumn::make('price_list_items_count')->counts('priceListItems')->label('Prices')->alignEnd(),
-                TextColumn::make('customer_tiers_count')->counts('customerTiers')->label('Tiers')->alignEnd(),
+                TextColumn::make('starts_on')->date()->placeholder(__('always')),
+                TextColumn::make('ends_on')->date()->placeholder(__('open ended')),
+                TextColumn::make('price_list_items_count')->counts('priceListItems')->label(__('Prices'))->alignEnd(),
+                TextColumn::make('customer_tiers_count')->counts('customerTiers')->label(__('Tiers'))->alignEnd(),
                 IconColumn::make('active')->boolean(),
             ])
             ->defaultSort('name')

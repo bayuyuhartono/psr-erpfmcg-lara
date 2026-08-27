@@ -45,7 +45,10 @@ class SalesOrderEntry extends Page
 
     protected static ?int $navigationSort = 1;
 
-    protected static ?string $title = 'Order entry';
+    public function getTitle(): string
+    {
+        return __('Order entry');
+    }
 
     public ?string $customerId = null;
 

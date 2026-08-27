@@ -18,14 +18,14 @@ class DiscountRulesTable
     {
         return $table
             ->columns([
-                TextColumn::make('sequence')->label('#')->alignEnd()->sortable(),
+                TextColumn::make('sequence')->label(__('#'))->alignEnd()->sortable(),
                 TextColumn::make('name')->searchable()->wrap(),
                 TextColumn::make('scope')->badge(),
                 TextColumn::make('target')->badge(),
-                TextColumn::make('percent')->suffix('%')->placeholder('—')->alignEnd(),
-                TextColumn::make('amount')->numeric(decimalPlaces: 2)->placeholder('—')->alignEnd(),
-                TextColumn::make('starts_on')->date()->placeholder('always')->toggleable(),
-                TextColumn::make('ends_on')->date()->placeholder('open ended')->toggleable(),
+                TextColumn::make('percent')->suffix('%')->placeholder(__('—'))->alignEnd(),
+                TextColumn::make('amount')->numeric(decimalPlaces: 2)->placeholder(__('—'))->alignEnd(),
+                TextColumn::make('starts_on')->date()->placeholder(__('always'))->toggleable(),
+                TextColumn::make('ends_on')->date()->placeholder(__('open ended'))->toggleable(),
             ])
             ->defaultSort('sequence')
             ->filters([

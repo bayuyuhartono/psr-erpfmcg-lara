@@ -26,7 +26,10 @@ class ChartOfAccountResource extends Resource
 
     protected static ?int $navigationSort = 10;
 
-    protected static ?string $pluralModelLabel = 'Chart of accounts';
+    public static function getPluralModelLabel(): string
+    {
+        return __('Chart of accounts');
+    }
 
     public static function form(Schema $schema): Schema
     {

@@ -17,6 +17,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 
 /**
@@ -30,23 +31,26 @@ class PriceListItemsRelationManager extends RelationManager
 {
     protected static string $relationship = 'priceListItems';
 
-    protected static ?string $title = 'Prices';
+    public static function getTitle(Model $ownerRecord, string $pageClass): string
+    {
+        return __('Prices');
+    }
 
     public function form(Schema $schema): Schema
     {
         return $schema->columns(2)->components([
             Select::make('product_id')
-                ->label('Product')
+                ->label(__('Product'))
                 ->relationship('product', 'name')
                 ->getOptionLabelFromRecordUsing(fn ($record): string => "{$record->sku} — {$record->name}")
                 ->searchable(['sku', 'name'])
                 ->preload()
                 ->required(),
-            TextInput::make('uom')->label('Unit')->required()->maxLength(16),
+            TextInput::make('uom')->label(__('Unit'))->required()->maxLength(16),
             DecimalInput::quantity('min_qty')
-                ->label('From quantity')
+                ->label(__('From quantity'))
                 ->default(0)->required()
-                ->helperText('0 is the base price. Add rows for volume bands.'),
+                ->helperText(__('0 is the base price. Add rows for volume bands.')),
             DecimalInput::money('unit_price')->required(),
         ]);
     }
@@ -56,15 +60,15 @@ class PriceListItemsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('uom')
             ->columns([
-                TextColumn::make('product.sku')->label('SKU')->searchable()->sortable(),
-                TextColumn::make('product.name')->label('Product')->searchable()->wrap(),
-                TextColumn::make('uom')->label('Unit'),
-                TextColumn::make('min_qty')->label('From qty')->alignEnd(),
+                TextColumn::make('product.sku')->label(__('SKU'))->searchable()->sortable(),
+                TextColumn::make('product.name')->label(__('Product'))->searchable()->wrap(),
+                TextColumn::make('uom')->label(__('Unit')),
+                TextColumn::make('min_qty')->label(__('From qty'))->alignEnd(),
                 TextColumn::make('unit_price')->numeric(decimalPlaces: 2)->alignEnd(),
                 // Margin is price against moving average cost, so it is cost
                 // data by another name and hides with it (F-70).
                 TextColumn::make('margin')
-                    ->label('Margin')
+                    ->label(__('Margin'))
                     ->alignEnd()
                     ->state(fn (PriceListItem $record): string => self::margin($record))
                     ->visible(fn (): bool => Gate::allows('view-cost')),

@@ -30,7 +30,7 @@ class Login extends BaseLogin
 
     public function getHeading(): string
     {
-        return 'Sign in';
+        return __('Sign in');
     }
 
     public function getSubheading(): ?string

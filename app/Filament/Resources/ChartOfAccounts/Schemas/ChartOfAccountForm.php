@@ -13,27 +13,27 @@ class ChartOfAccountForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Account')->columns(2)->schema([
+            Section::make(__('Account'))->columns(2)->schema([
                 TextInput::make('code')->required()->unique(ignoreRecord: true)->maxLength(32),
                 TextInput::make('name')->required()->maxLength(255),
                 Select::make('account_type')
-                    ->label('Type')
+                    ->label(__('Type'))
                     ->options([
                         'asset' => 'Asset', 'liability' => 'Liability', 'equity' => 'Equity',
                         'revenue' => 'Revenue', 'expense' => 'Expense',
                     ])
                     ->required()
-                    ->helperText('Decides which side the account carries, and which statement it appears on.'),
+                    ->helperText(__('Decides which side the account carries, and which statement it appears on.')),
                 Select::make('parent_id')
-                    ->label('Sits under')
+                    ->label(__('Sits under'))
                     ->relationship('parent', 'name')
                     ->searchable()->preload(),
             ]),
 
-            Section::make('Behaviour')->columns(2)->schema([
+            Section::make(__('Behaviour'))->columns(2)->schema([
                 Toggle::make('is_cash_account')
-                    ->label('Cash account')
-                    ->helperText('Counted in the cash position an owner looks at first.'),
+                    ->label(__('Cash account'))
+                    ->helperText(__('Counted in the cash position an owner looks at first.')),
                 Toggle::make('active')->default(true),
             ]),
         ]);

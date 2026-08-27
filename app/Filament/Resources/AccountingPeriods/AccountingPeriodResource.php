@@ -26,7 +26,10 @@ class AccountingPeriodResource extends Resource
 
     protected static ?int $navigationSort = 40;
 
-    protected static ?string $pluralModelLabel = 'Periods';
+    public static function getPluralModelLabel(): string
+    {
+        return __('Periods');
+    }
 
     public static function form(Schema $schema): Schema
     {

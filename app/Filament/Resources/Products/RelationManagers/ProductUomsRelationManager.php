@@ -36,13 +36,16 @@ class ProductUomsRelationManager extends RelationManager
 {
     protected static string $relationship = 'productUoms';
 
-    protected static ?string $title = 'Units';
+    public static function getTitle(Model $ownerRecord, string $pageClass): string
+    {
+        return __('Units');
+    }
 
     public function form(Schema $schema): Schema
     {
         return $schema->components([
             TextInput::make('uom')
-                ->label('Unit')
+                ->label(__('Unit'))
                 ->required()
                 ->maxLength(16)
                 ->helperText(fn (): string => 'e.g. CARTON, PACK. The base unit is '.$this->getOwnerRecord()->base_uom.'.'),
@@ -50,8 +53,8 @@ class ProductUomsRelationManager extends RelationManager
                 ->label(fn (): string => 'How many '.$this->getOwnerRecord()->base_uom.' in one')
                 ->required(),
             TextInput::make('barcode')->maxLength(64),
-            Toggle::make('default_for_purchase')->label('Default when buying'),
-            Toggle::make('default_for_sale')->label('Default when selling'),
+            Toggle::make('default_for_purchase')->label(__('Default when buying')),
+            Toggle::make('default_for_sale')->label(__('Default when selling')),
         ]);
     }
 
@@ -60,11 +63,11 @@ class ProductUomsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('uom')
             ->columns([
-                TextColumn::make('uom')->label('Unit')->searchable(),
-                TextColumn::make('qty_in_base')->label('In base units'),
-                TextColumn::make('barcode')->searchable()->placeholder('—'),
-                IconColumn::make('default_for_purchase')->label('Buy')->boolean(),
-                IconColumn::make('default_for_sale')->label('Sell')->boolean(),
+                TextColumn::make('uom')->label(__('Unit'))->searchable(),
+                TextColumn::make('qty_in_base')->label(__('In base units')),
+                TextColumn::make('barcode')->searchable()->placeholder(__('—')),
+                IconColumn::make('default_for_purchase')->label(__('Buy'))->boolean(),
+                IconColumn::make('default_for_sale')->label(__('Sell'))->boolean(),
             ])
             ->defaultSort('qty_in_base', 'desc')
             ->headerActions([

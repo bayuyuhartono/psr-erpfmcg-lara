@@ -26,7 +26,10 @@ class JournalMappingResource extends Resource
 
     protected static ?int $navigationSort = 20;
 
-    protected static ?string $pluralModelLabel = 'Journal mappings';
+    public static function getPluralModelLabel(): string
+    {
+        return __('Journal mappings');
+    }
 
     public static function form(Schema $schema): Schema
     {

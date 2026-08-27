@@ -20,25 +20,25 @@ class JournalEntryInfolist
     {
         return $schema->components([
             Section::make()->columns(3)->schema([
-                TextEntry::make('document_number')->label('Entry'),
+                TextEntry::make('document_number')->label(__('Entry')),
                 TextEntry::make('entry_date')->date(),
                 TextEntry::make('status')->badge()->color(fn (string $state): string => match ($state) {
                     'posted' => 'success', 'reversed' => 'danger', default => 'gray',
                 }),
                 TextEntry::make('ref_type')
-                    ->label('Raised by')
+                    ->label(__('Raised by'))
                     ->badge()
                     ->formatStateUsing(fn (?string $state): string => str_replace('_', ' ', (string) $state)),
-                TextEntry::make('description')->columnSpan(2)->placeholder('—'),
+                TextEntry::make('description')->columnSpan(2)->placeholder(__('—')),
             ]),
 
-            Section::make('Lines')->schema([
+            Section::make(__('Lines'))->schema([
                 RepeatableEntry::make('journalLines')
                     ->hiddenLabel()
                     ->columns(4)
                     ->schema([
-                        TextEntry::make('account.code')->label('Account'),
-                        TextEntry::make('account.name')->label('')->color('gray'),
+                        TextEntry::make('account.code')->label(__('Account')),
+                        TextEntry::make('account.name')->label(__(''))->color('gray'),
                         TextEntry::make('debit')
                             ->alignEnd()
                             ->formatStateUsing(fn ($state): string => $state === null || (float) (string) $state === 0.0

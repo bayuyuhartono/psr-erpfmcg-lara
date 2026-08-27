@@ -20,7 +20,7 @@
         <x-filament::section>
             <div class="grid gap-4 md:grid-cols-3">
                 <div class="relative md:col-span-2">
-                    <label class="mb-1 block text-sm font-medium">Customer</label>
+                    <label class="mb-1 block text-sm font-medium">{{ __('Customer') }}</label>
 
                     <x-filament::input.wrapper>
                         <x-filament::input
@@ -57,19 +57,19 @@
                     ])>
                         <dl class="space-y-0.5">
                             <div class="flex justify-between gap-4">
-                                <dt class="text-gray-500 dark:text-gray-400">Credit limit</dt>
+                                <dt class="text-gray-500 dark:text-gray-400">{{ __('Credit limit') }}</dt>
                                 <dd>{{ number_format((float) $credit['limit'], 0, ',', '.') }}</dd>
                             </div>
                             <div class="flex justify-between gap-4">
-                                <dt class="text-gray-500 dark:text-gray-400">Already owes</dt>
+                                <dt class="text-gray-500 dark:text-gray-400">{{ __('Already owes') }}</dt>
                                 <dd>{{ number_format((float) $credit['owed'], 0, ',', '.') }}</dd>
                             </div>
                             <div class="flex justify-between gap-4">
-                                <dt class="text-gray-500 dark:text-gray-400">This order</dt>
+                                <dt class="text-gray-500 dark:text-gray-400">{{ __('This order') }}</dt>
                                 <dd>{{ number_format((float) $credit['order'], 0, ',', '.') }}</dd>
                             </div>
                             <div class="mt-1 flex justify-between gap-4 border-t border-gray-200 pt-1 font-medium dark:border-white/10">
-                                <dt>Left after this</dt>
+                                <dt>{{ __('Left after this') }}</dt>
                                 <dd @class(['text-danger-600 dark:text-danger-400' => $credit['over']])>
                                     {{ number_format((float) $credit['remaining'], 0, ',', '.') }}
                                 </dd>
@@ -91,7 +91,7 @@
         <x-filament::section class="mt-6">
             <div class="grid gap-3 md:grid-cols-12">
                 <div class="relative md:col-span-6">
-                    <label class="mb-1 block text-sm font-medium">Product</label>
+                    <label class="mb-1 block text-sm font-medium">{{ __('Product') }}</label>
 
                     <x-filament::input.wrapper>
                         <x-filament::input
@@ -147,7 +147,7 @@
 
                 {{-- Five cartons and five pieces are not the same order. --}}
                 <div class="md:col-span-3">
-                    <label class="mb-1 block text-sm font-medium">Unit</label>
+                    <label class="mb-1 block text-sm font-medium">{{ __('Unit') }}</label>
                     <x-filament::input.wrapper>
                         <x-filament::input.select wire:model="selectedUom" :disabled="! $this->unitOptions()">
                             @forelse ($this->unitOptions() as $value => $label)
@@ -187,12 +187,12 @@
                     <table class="w-full text-sm">
                         <thead class="text-gray-500 dark:text-gray-400">
                             <tr class="text-left">
-                                <th class="pb-2 font-medium">SKU</th>
-                                <th class="pb-2 font-medium">Product</th>
-                                <th class="pb-2 font-medium">Unit</th>
+                                <th class="pb-2 font-medium">{{ __('SKU') }}</th>
+                                <th class="pb-2 font-medium">{{ __('Product') }}</th>
+                                <th class="pb-2 font-medium">{{ __('Unit') }}</th>
                                 <th class="pb-2 text-right font-medium">Qty</th>
-                                <th class="pb-2 text-right font-medium">Price</th>
-                                <th class="pb-2 text-right font-medium">Total</th>
+                                <th class="pb-2 text-right font-medium">{{ __('Price') }}</th>
+                                <th class="pb-2 text-right font-medium">{{ __('Total') }}</th>
                                 <th class="w-8"></th>
                             </tr>
                         </thead>
@@ -237,20 +237,20 @@
                 </div>
             @else
                 <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Nothing yet. Find a product above and press Enter.
+                    {{ __('Nothing yet. Find a product above and press Enter.') }}
                 </p>
             @endif
 
             <x-slot name="footerActions">
                 <x-filament::button wire:click="save" :disabled="! $this->lines">
-                    Save order
+                    {{ __('Save order') }}
                     @if ($this->lines)
                         · {{ number_format((float) $this->total(), 0, ',', '.') }}
                     @endif
                 </x-filament::button>
 
                 <x-filament::button wire:click="copyPrevious" color="gray" outlined>
-                    Copy last order
+                    {{ __('Copy last order') }}
                 </x-filament::button>
             </x-slot>
         </x-filament::section>

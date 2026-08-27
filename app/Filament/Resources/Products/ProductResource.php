@@ -26,7 +26,10 @@ class ProductResource extends Resource
 
     protected static ?int $navigationSort = 10;
 
-    protected static ?string $pluralModelLabel = 'Products';
+    public static function getPluralModelLabel(): string
+    {
+        return __('Products');
+    }
 
     public static function form(Schema $schema): Schema
     {

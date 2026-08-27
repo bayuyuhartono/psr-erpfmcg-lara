@@ -17,10 +17,10 @@ class PrintTemplatesTable
     {
         return $table
             ->columns([
-                TextColumn::make('document_type')->label('Document')->badge()->searchable(),
+                TextColumn::make('document_type')->label(__('Document'))->badge()->searchable(),
                 TextColumn::make('format')->badge()->color(fn (string $state): string => $state === 'dotmatrix' ? 'warning' : 'gray'),
                 TextColumn::make('name')->searchable(),
-                TextColumn::make('width_chars')->label('Width')->alignEnd()->placeholder('—'),
+                TextColumn::make('width_chars')->label(__('Width'))->alignEnd()->placeholder(__('—')),
                 TextColumn::make('copies')->alignEnd(),
                 IconColumn::make('active')->boolean(),
             ])

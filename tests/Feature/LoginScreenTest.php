@@ -43,7 +43,7 @@ final class LoginScreenTest extends TestCase
     {
         $this->get('/admin/login')
             ->assertSuccessful()
-            ->assertSee('Sign in')
+            ->assertSee(__('Sign in'))
             // No logo uploaded, so the panel falls back to the company name.
             ->assertSee('PT Sumber Rejeki');
     }

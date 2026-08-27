@@ -13,14 +13,14 @@ class BrandForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Brand')->columns(2)->schema([
+            Section::make(__('Brand'))->columns(2)->schema([
                 TextInput::make('code')->required()->unique(ignoreRecord: true)->maxLength(64),
                 TextInput::make('name')->required()->maxLength(255),
                 Select::make('principal_id')
-                    ->label('Principal')
+                    ->label(__('Principal'))
                     ->relationship('principal', 'name', fn ($query) => $query->principals())
                     ->searchable()->preload()
-                    ->helperText('Leave blank for unbranded or generic goods.'),
+                    ->helperText(__('Leave blank for unbranded or generic goods.')),
                 Toggle::make('active')->default(true),
             ]),
         ]);

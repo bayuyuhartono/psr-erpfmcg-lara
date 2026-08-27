@@ -13,21 +13,21 @@ class PriceListForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Price list')
-                ->description('Prices themselves are added once the list is saved.')
+            Section::make(__('Price list'))
+                ->description(__('Prices themselves are added once the list is saved.'))
                 ->columns(2)
                 ->schema([
                     TextInput::make('name')->required()->maxLength(255)
-                        ->placeholder('Wholesale 2026, Modern trade'),
+                        ->placeholder(__('Wholesale 2026, Modern trade')),
                     Toggle::make('active')->default(true),
                 ]),
 
-            Section::make('When it applies')
-                ->description('Leave both blank for a list that is simply always in force.')
+            Section::make(__('When it applies'))
+                ->description(__('Leave both blank for a list that is simply always in force.'))
                 ->columns(2)
                 ->schema([
-                    DatePicker::make('starts_on')->helperText('Blank means it has always applied.'),
-                    DatePicker::make('ends_on')->helperText('Blank means it does not expire.')
+                    DatePicker::make('starts_on')->helperText(__('Blank means it has always applied.')),
+                    DatePicker::make('ends_on')->helperText(__('Blank means it does not expire.'))
                         ->after('starts_on'),
                 ]),
         ]);

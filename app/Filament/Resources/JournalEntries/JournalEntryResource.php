@@ -24,7 +24,10 @@ class JournalEntryResource extends Resource
 
     protected static ?int $navigationSort = 30;
 
-    protected static ?string $pluralModelLabel = 'Journal entries';
+    public static function getPluralModelLabel(): string
+    {
+        return __('Journal entries');
+    }
 
     /**
      * Read only, so this is an infolist and not a form. A ViewAction backed by

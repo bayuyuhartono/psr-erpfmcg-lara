@@ -26,7 +26,10 @@ class CategoryResource extends Resource
 
     protected static ?int $navigationSort = 30;
 
-    protected static ?string $pluralModelLabel = 'Categories';
+    public static function getPluralModelLabel(): string
+    {
+        return __('Categories');
+    }
 
     public static function form(Schema $schema): Schema
     {
