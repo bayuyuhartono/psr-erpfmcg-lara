@@ -64,6 +64,17 @@ final class UpdateInstallation extends Command
 
         $this->call('optimize:clear');
 
+        // An uploaded logo lives under storage/app/public and is served through
+        // this symlink. A release unpacked from the package has no symlink —
+        // and a missing one shows as a broken image on the login screen, which
+        // reads as a broken installation.
+        // `is_dir` rather than `file_exists`: a symlink left dangling by an
+        // extractor is the case that needs fixing, and file_exists() reports
+        // false for it while the link still occupies the path.
+        if (! is_dir(public_path('storage'))) {
+            $this->call('storage:link', ['--force' => true]);
+        }
+
         $after = $version->describe();
         $this->info(sprintf('Now on %s, %d migration(s) applied.', $after['schema'], $after['applied']));
 

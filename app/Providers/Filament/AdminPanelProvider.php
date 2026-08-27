@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Domain\Masters\Services\CompanyIdentity;
+use App\Filament\Auth\Login;
 use Brick\Math\BigDecimal;
 use Filament\Enums\ThemeMode;
 use Filament\Forms\Components\TextInput;
@@ -30,8 +32,16 @@ final class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
-            ->brandName('FMCG Distributor ERP')
+            ->login(Login::class)
+            // Both read at render time, not at boot, so a change on the
+            // Company profile screen shows on the next page rather than after a
+            // deploy. Filament's logo component picks one or the other: an
+            // uploaded logo replaces the wordmark on the header and the login
+            // screen, and the name comes back if the logo is removed.
+            ->brandName(fn (): string => app(CompanyIdentity::class)->name())
+            ->brandLogo(fn (): ?string => app(CompanyIdentity::class)->logoUrl())
+            ->brandLogoHeight('2rem')
+            ->favicon(fn (): ?string => app(CompanyIdentity::class)->faviconUrl())
             ->colors(['primary' => Color::Indigo])
             // Filament ships a precompiled stylesheet containing only the
             // classes Filament itself uses. The custom pages here — order
@@ -45,6 +55,19 @@ final class AdminPanelProvider extends PanelProvider
             // broken. The switcher stays, so the preference is still theirs.
             ->defaultThemeMode(ThemeMode::Light)
             ->themeSwitcher()
+            // Without this the sidebar falls back to discovery order, which is
+            // alphabetical by accident and put System in the middle. Ordered by
+            // how often a distributor's staff actually open them: order entry
+            // all day, the chart of accounts at month end, backups rarely.
+            ->navigationGroups([
+                'Sales',
+                'Partners',
+                'Catalogue',
+                'Pricing',
+                'Warehouse',
+                'Accounting',
+                'System',
+            ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([Dashboard::class])

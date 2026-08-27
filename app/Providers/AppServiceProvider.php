@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domain\Masters\Services\CompanyIdentity;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -13,7 +14,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Read on every render, including the login screen. A singleton so the
+        // row is fetched once a request rather than once a component.
+        $this->app->singleton(CompanyIdentity::class);
     }
 
     /**

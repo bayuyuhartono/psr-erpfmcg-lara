@@ -53,7 +53,17 @@ installation, and the first thing support will ask for.
    *without* running it first produces an unstyled panel on the client's
    machine. `app:package` refuses to build in that state.
 
-6. Go through [What to configure before going live](#what-to-configure-before-going-live).
+6. Link the uploads directory:
+   ```bash
+   php artisan storage:link
+   ```
+   The company logo and tab icon live under `storage/app/public` and are served
+   through this symlink. Without it both are broken images — including on the
+   login screen, which reads as a broken installation to the first person who
+   sees it. `app:update` creates it if it is missing, but a first install has no
+   update to run.
+
+7. Go through [What to configure before going live](#what-to-configure-before-going-live).
 
 ### Just looking at it?
 
@@ -182,6 +192,7 @@ These are data, not code — all editable in the admin panel.
 | Products, customers, opening stock | Catalogue → Import from Excel | Download the template, fill it in, check it, then import. One bad row imports nothing |
 | Warehouses and rack locations | Warehouse → Warehouses | `pick_sequence` is the order pickers walk the racks. Without it, picking lists sort last |
 | Credit limits and exchange days | Partners → Business partners | Drives credit holds and the collections day list |
+| Company name, logo, tab icon | System → Company profile | The name prints on every invoice. A logo replaces the wordmark in the header and on the login screen; the tab icon is separate because a wide logo is unreadable at 16px |
 
 ### Two accounting choices made without an accountant
 
