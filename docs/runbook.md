@@ -41,7 +41,7 @@ installation, and the first thing support will ask for.
    administrator whose password shipped in a seeder is one whose password is
    known on every installation. Then check they can sign in at `/admin`.
 
-   Later accounts are made on the Users screen, or with the same command and
+   Later accounts are made on **System → Users**, or with the same command and
    `--role=` for a warehouse supervisor, finance manager and so on.
 5. Build the front end. Without these, every screen loads unstyled:
    ```bash
@@ -157,7 +157,7 @@ is permissioned.
 | Stock figure looks wrong | `php artisan stock:rebuild-balances --check` — reports without changing anything. Anything it finds means something wrote stock outside the posting kernel |
 | An order is stuck holding stock | `php artisan stock:release-expired-reservations --check` |
 | Collections do not know who to visit | `php artisan collections:today` |
-| "This installation was licensed for N users" | Someone is being activated beyond the seats bought. Deactivate an unused account, or buy more. **Nobody already working is affected** |
+| "This installation was licensed for N users" | Someone is being activated beyond the seats bought. Deactivate an unused account on **System → Users** — the list shows who has never signed in — or buy more. **Nobody already working is affected** |
 | Nobody can sign in | No users exist yet, or the only one was deactivated. `php artisan app:create-admin` |
 | Screens load unstyled | `php artisan filament:assets` and `npm ci && npm run build` were never run. If only the *custom* pages look wrong — order entry, imports, backups — the panel's theme is missing: it is registered with `->viteTheme()` and built from `resources/css/filament/admin/theme.css`, whose `@source` lines tell Tailwind where this application's markup lives |
 | Order entry will not accept anything | The screen lists what is missing at the top — usually no warehouse, customers or prices yet |
